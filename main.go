@@ -35,6 +35,17 @@ func eval(form string) {
 		fmt.Printf(" ~ %v\n", err)
 	}
 	exec(tokens)
+
+	fmt.Printf("-----\n")
+
+	p := interpreter.NewParser(tokens)
+	e, err := p.Parse()
+
+	if err != nil {
+		fmt.Printf("ERROR: %v\n", err)
+	}
+
+	fmt.Printf("TREE: %v\n", e.AsString())
 }
 
 const promptRepl = "repl> "
@@ -61,6 +72,7 @@ func main() {
 
 		reader.Append(line)
 
+		// TODO: Keep reading forms until exhausted.
 		if reader.IsBalanced() {
 			rl.SetPrompt(promptRepl)
 			form, err := reader.GetNextForm()
