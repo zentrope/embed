@@ -23,35 +23,36 @@ import (
 	"github.com/zentrope/embed/interpreter"
 )
 
-func exec(tokens *interpreter.Tokens) {
-	for i, t := range tokens.Tokens {
-		fmt.Printf(" - %2v %v\n", i, t)
-	}
-}
+// func exec(tokens *interpreter.Tokens) {
+//	for i, t := range tokens.Tokens {
+//		fmt.Printf(" - %2v %v\n", i, t)
+//	}
+// }
 
 func eval(env *interpreter.Environment, form string) {
 	tokens, err := interpreter.Tokenize(form)
 	if err != nil {
 		fmt.Printf(" ~ %v\n", err)
 	}
-	exec(tokens)
+	// exec(tokens)
 
-	fmt.Printf("-----\n")
+	// fmt.Printf("-----\n")
 
 	p := interpreter.NewParser(tokens)
 	expr, err := p.Parse()
 
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err)
+		return
 	}
 
-	fmt.Printf("TREE: %v\n", expr.AsString())
+	// fmt.Printf("TREE: %v\n", expr.AsString())
 
 	result, err := interpreter.Evaluate(env, expr)
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err)
 	} else {
-		fmt.Printf("EVAL: %v\n", result)
+		fmt.Printf("%v\n", result)
 	}
 }
 
