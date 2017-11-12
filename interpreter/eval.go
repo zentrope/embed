@@ -70,8 +70,6 @@ func isTruthy(sexp Sexp) bool {
 }
 
 func evalIf(env *Environment, exprs []Sexp) (Sexp, error) {
-	// Return the eval of the 2nd term if the 1st is truthy, or the
-	// third if not, or nil if there's no third expression.
 	if len(exprs) < 2 {
 		return nil, fmt.Errorf("too few arguments (%v) to if", len(exprs))
 	}
@@ -101,8 +99,6 @@ func evalIf(env *Environment, exprs []Sexp) (Sexp, error) {
 }
 
 func evalAnd(env *Environment, exprs []Sexp) (Sexp, error) {
-	// Evaluate each term, returning the first non-truthy value, or the
-	// last truthy value.
 
 	var result Sexp
 	var err error
@@ -111,10 +107,6 @@ func evalAnd(env *Environment, exprs []Sexp) (Sexp, error) {
 		result, err = Evaluate(env, e)
 		if err != nil {
 			return nil, err
-		}
-
-		if result == nil {
-			return nil, nil
 		}
 
 		if !isTruthy(result) {
@@ -126,8 +118,6 @@ func evalAnd(env *Environment, exprs []Sexp) (Sexp, error) {
 }
 
 func evalOr(env *Environment, exprs []Sexp) (Sexp, error) {
-	// Return the first truthy value, or the last false value if none
-	// are truthy.
 
 	var result Sexp
 	var err error
@@ -136,10 +126,6 @@ func evalOr(env *Environment, exprs []Sexp) (Sexp, error) {
 		result, err = Evaluate(env, e)
 		if err != nil {
 			return nil, err
-		}
-
-		if result == nil {
-			continue
 		}
 
 		if isTruthy(result) {
