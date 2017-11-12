@@ -28,7 +28,7 @@ godep:
 vendor: godep ## Make sure vendor dependencies are present.
 	dep ensure
 
-build: vendor
+build: vendor ## Build an executable binary.
 	go build -o $(BINARY)
 
 clean: ## Clean build artifacts (vendor left alone).
