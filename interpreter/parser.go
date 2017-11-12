@@ -27,6 +27,7 @@ type Sexp interface {
 	AsString() string
 }
 
+type sexpPrimitive primitiveFunc
 type sexpList []Sexp
 type sexpString string
 type sexpInteger int64
@@ -34,6 +35,10 @@ type sexpFloat float64
 type sexpSymbol string
 type sexpQuote struct {
 	quote Sexp
+}
+
+func (s sexpPrimitive) AsString() string {
+	return fmt.Sprintf("builtin::%v", s)
 }
 
 func (s sexpQuote) AsString() string {

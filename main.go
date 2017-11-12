@@ -29,7 +29,7 @@ func exec(tokens *interpreter.Tokens) {
 	}
 }
 
-func eval(form string) {
+func eval(env *interpreter.Environment, form string) {
 	tokens, err := interpreter.Tokenize(form)
 	if err != nil {
 		fmt.Printf(" ~ %v\n", err)
@@ -39,13 +39,20 @@ func eval(form string) {
 	fmt.Printf("-----\n")
 
 	p := interpreter.NewParser(tokens)
-	e, err := p.Parse()
+	expr, err := p.Parse()
 
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err)
 	}
 
-	fmt.Printf("TREE: %v\n", e.AsString())
+	fmt.Printf("TREE: %v\n", expr.AsString())
+
+	result, err := interpreter.Evaluate(env, expr)
+	if err != nil {
+		fmt.Printf("ERROR: %v\n", err)
+	} else {
+		fmt.Printf("EVAL: %v\n", result)
+	}
 }
 
 const promptRepl = "repl> "
@@ -60,6 +67,8 @@ func main() {
 	}
 
 	defer rl.Close()
+
+	environment := interpreter.NewEnvironment()
 
 	reader := interpreter.NewReader()
 
@@ -81,7 +90,7 @@ func main() {
 				continue
 			}
 
-			eval(form)
+			eval(environment, form)
 
 		} else {
 			reader.Append("\n")
