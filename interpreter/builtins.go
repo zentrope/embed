@@ -17,6 +17,7 @@
 package interpreter
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -25,9 +26,34 @@ var builtins = map[string]primitiveFunc{
 	"+":   primitiveAdd,
 	"-":   primitiveMinus,
 	"prn": primitivePrn,
+	"=":   pEquals,
 }
 
 type primitiveFunc func(args []Sexp) (Sexp, error)
+
+// TRUE represents a true boolean value
+const TRUE = sexpBool(true)
+
+// FALSE represents a false boolean value
+const FALSE = sexpBool(false)
+
+func pEquals(args []Sexp) (Sexp, error) {
+	// Return true if all the arguments are equal to each other in value
+	// and type.
+
+	if len(args) < 1 {
+		return FALSE, errors.New("wrong number of args for '=', must be at least one")
+	}
+
+	sentinel := args[0]
+
+	for _, a := range args[1:] {
+		if a != sentinel {
+			return FALSE, nil
+		}
+	}
+	return TRUE, nil
+}
 
 func primitiveAdd(args []Sexp) (Sexp, error) {
 	var result float64

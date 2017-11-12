@@ -36,9 +36,6 @@ func apply(env *Environment, op Sexp, args []Sexp) (Sexp, error) {
 		params = append(params, param)
 	}
 
-	fmt.Printf(" op: %#v\n", theOp)
-	fmt.Printf(" args: %#v\n", params)
-
 	switch f := theOp.(type) {
 	case sexpPrimitive:
 		result, err := f(params)
@@ -49,18 +46,117 @@ func apply(env *Environment, op Sexp, args []Sexp) (Sexp, error) {
 	default:
 		return nil, fmt.Errorf("function not found: '%v'", f)
 	}
-
-	//return nil, errors.New("not implemented")
 }
 
-func first(list []Sexp) Sexp {
+func isSpecial(key string, expr Sexp) bool {
+	switch t := expr.(type) {
+	case sexpSymbol:
+		return key == string(t)
+	default:
+		return false
+	}
+}
+
+func isTruthy(sexp Sexp) bool {
+	if sexp == nil {
+		return false
+	}
+
+	switch t := sexp.(type) {
+	case sexpBool:
+		return bool(t)
+	}
+	return true
+}
+
+func evalIf(env *Environment, exprs []Sexp) (Sexp, error) {
+	// Return the eval of the 2nd term if the 1st is truthy, or the
+	// third if not, or nil if there's no third expression.
+	if len(exprs) < 2 {
+		return nil, fmt.Errorf("too few arguments (%v) to if", len(exprs))
+	}
+	if len(exprs) > 3 {
+		return nil, fmt.Errorf("too many arguments (%v) to if", len(exprs))
+	}
+
+	test, err := Evaluate(env, exprs[0])
+	if err != nil {
+		return nil, err
+	}
+
+	var result Sexp
+
+	if isTruthy(test) {
+		result, err = Evaluate(env, exprs[1])
+		if err != nil {
+			return nil, err
+		}
+	} else if len(exprs) >= 3 {
+		result, err = Evaluate(env, exprs[2])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return result, nil
+}
+
+func evalAnd(env *Environment, exprs []Sexp) (Sexp, error) {
+	// Evaluate each term, returning the first non-truthy value, or the
+	// last truthy value.
+
+	var result Sexp
+	var err error
+
+	for _, e := range exprs {
+		result, err = Evaluate(env, e)
+		if err != nil {
+			return nil, err
+		}
+
+		if result == nil {
+			return nil, nil
+		}
+
+		if !isTruthy(result) {
+			return result, nil
+		}
+	}
+
+	return result, nil
+}
+
+func evalOr(env *Environment, exprs []Sexp) (Sexp, error) {
+	// Return the first truthy value, or the last false value if none
+	// are truthy.
+
+	var result Sexp
+	var err error
+
+	for _, e := range exprs {
+		result, err = Evaluate(env, e)
+		if err != nil {
+			return nil, err
+		}
+
+		if result == nil {
+			continue
+		}
+
+		if isTruthy(result) {
+			return result, nil
+		}
+	}
+	return result, nil
+}
+
+func head(list []Sexp) Sexp {
 	if len(list) == 0 {
 		return nil
 	}
 	return list[0]
 }
 
-func rest(list []Sexp) []Sexp {
+func tail(list []Sexp) []Sexp {
 	if len(list) == 0 {
 		return list
 	}
@@ -69,11 +165,21 @@ func rest(list []Sexp) []Sexp {
 
 // Evaluate an expression
 func Evaluate(env *Environment, expr Sexp) (Sexp, error) {
+
 	switch t := expr.(type) {
 
 	case sexpList:
-		// apply first to rest
-		return apply(env, first(t), rest(t))
+		op := head(t)
+		if isSpecial("and", op) {
+			return evalAnd(env, tail(t))
+		}
+		if isSpecial("or", op) {
+			return evalOr(env, tail(t))
+		}
+		if isSpecial("if", op) {
+			return evalIf(env, tail(t))
+		}
+		return apply(env, head(t), tail(t))
 
 	case sexpInteger:
 		return t, nil
@@ -88,9 +194,10 @@ func Evaluate(env *Environment, expr Sexp) (Sexp, error) {
 		return t.quote, nil
 
 	case sexpSymbol:
+
 		found, value := env.Lookup(string(t))
 		if !found {
-			return nil, fmt.Errorf("value not found for '%v' (%#v)", t, t)
+			return nil, fmt.Errorf("value not found for '%v'", t.AsString())
 		}
 		return Evaluate(env, value)
 

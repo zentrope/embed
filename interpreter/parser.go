@@ -33,8 +33,13 @@ type sexpString string
 type sexpInteger int64
 type sexpFloat float64
 type sexpSymbol string
+type sexpBool bool
 type sexpQuote struct {
 	quote Sexp
+}
+
+func (s sexpBool) AsString() string {
+	return fmt.Sprintf("bool::%v", s)
 }
 
 func (s sexpPrimitive) AsString() string {
@@ -102,7 +107,6 @@ func (p *Parser) notDone() bool {
 // Parse returns an s-expression suitable for interpretation.
 func (p *Parser) Parse() (Sexp, error) {
 	token := p.next()
-
 	switch token.kind {
 
 	case AOpenParen:
@@ -138,6 +142,7 @@ func (p *Parser) Parse() (Sexp, error) {
 func (p *Parser) parseList() (Sexp, error) {
 	list := make([]Sexp, 0)
 
+done:
 	for p.notDone() {
 		token := p.next()
 
@@ -146,12 +151,12 @@ func (p *Parser) parseList() (Sexp, error) {
 		case AOpenParen:
 			sublist, err := p.parseList()
 			if err != nil {
-				return sublist, err
+				return nil, err
 			}
 			list = append(list, sublist)
 
 		case ACloseParen:
-			break
+			break done
 
 		default:
 			p.pushBack()
