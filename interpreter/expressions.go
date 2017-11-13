@@ -18,6 +18,7 @@ package interpreter
 
 import (
 	"fmt"
+	"hash/fnv"
 	"log"
 	"strings"
 )
@@ -41,6 +42,7 @@ const (
 // Expression represents a computation
 type Expression struct {
 	typ       ExpressionType
+	hash      uint32
 	string    string
 	integer   int64
 	float     float64
@@ -53,7 +55,17 @@ type Expression struct {
 
 // NewExpr constructs a new expression of the given type
 func NewExpr(typ ExpressionType, value interface{}) Expression {
-	e := Expression{typ: typ}
+
+	hash := fnv.New32()
+	if typ == ExpList {
+		for _, e := range value.([]Expression) {
+			fmt.Fprint(hash, e.hash)
+		}
+	} else {
+		fmt.Fprint(hash, value)
+	}
+
+	e := Expression{typ: typ, hash: hash.Sum32()}
 	switch typ {
 	case ExpPrimitive:
 		e.primitive = value.(primitiveFunc)
@@ -142,7 +154,7 @@ func (e Expression) String() string {
 	case ExpBool:
 		return fmt.Sprintf("%v", e.bool)
 	case ExpQuote:
-		return "(quote " + e.quote.String() + ")"
+		return e.quote.String()
 	default:
 		return fmt.Sprintf("unknown→%#v", e)
 	}
@@ -216,35 +228,5 @@ func (e Expression) InvokePrimitive(params []Expression) (Expression, error) {
 
 // Equals returns true of the values of e1 and e2 match
 func (e Expression) Equals(e2 Expression) bool {
-	if e.typ != e2.typ {
-		return false
-	}
-	switch e.typ {
-	case ExpPrimitive:
-		return &e.primitive == &e2.primitive
-	case ExpList:
-		if len(e.list) != len(e2.list) {
-			return false
-		}
-		for i := 0; i < len(e.list); i++ {
-			if !e.list[i].Equals(e2.list[i]) {
-				return false
-			}
-		}
-		return true
-	case ExpString:
-		return e.string == e2.string
-	case ExpInteger:
-		return e.integer == e2.integer
-	case ExpFloat:
-		return e.float == e2.float
-	case ExpSymbol:
-		return e.symbol == e2.symbol
-	case ExpBool:
-		return e.bool == e2.bool
-	case ExpQuote:
-		return e.quote.Equals(*e2.quote)
-	default:
-		return false
-	}
+	return e.hash == e2.hash
 }
