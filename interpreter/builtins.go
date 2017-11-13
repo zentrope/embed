@@ -71,8 +71,26 @@ func primitiveAdd(args []Sexp) (Sexp, error) {
 }
 
 func primitiveMinus(args []Sexp) (Sexp, error) {
+	if len(args) < 1 {
+		return nil, errors.New("'-' requires 1 or more args")
+	}
+
 	var result float64
-	for _, arg := range args {
+
+	switch x := args[0].(type) {
+	case sexpFloat:
+		result = float64(x)
+	case sexpInteger:
+		result = float64(x)
+	default:
+		return nil, fmt.Errorf("unknown argument type, int/float expected, got [%#v]", x)
+	}
+
+	if len(args) == 1 {
+		return sexpFloat(-1.0 * result), nil
+	}
+
+	for _, arg := range args[1:] {
 		switch x := arg.(type) {
 		case sexpFloat:
 			result = result - float64(x)
