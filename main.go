@@ -27,16 +27,15 @@ import (
 //	for i, t := range tokens.Tokens {
 //		fmt.Printf(" - %2v %v\n", i, t)
 //	}
+// fmt.Printf("-----\n")
 // }
 
-func eval(env *interpreter.Environment, form string) {
+func eval(env interpreter.Environment, form string) {
 	tokens, err := interpreter.Tokenize(form)
 	if err != nil {
 		fmt.Printf(" ~ %v\n", err)
 	}
 	// exec(tokens)
-
-	// fmt.Printf("-----\n")
 
 	p := interpreter.NewParser(tokens)
 	expr, err := p.Parse()
@@ -46,7 +45,7 @@ func eval(env *interpreter.Environment, form string) {
 		return
 	}
 
-	// fmt.Printf("TREE: %v\n", expr.AsString())
+	// fmt.Printf("TREE: %v\n", expr.DebugString())
 
 	result, err := interpreter.Evaluate(env, expr)
 	if err != nil {
@@ -70,7 +69,6 @@ func main() {
 	defer rl.Close()
 
 	environment := interpreter.NewEnvironment()
-
 	reader := interpreter.NewReader()
 
 	for {

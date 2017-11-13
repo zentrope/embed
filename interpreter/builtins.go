@@ -29,85 +29,87 @@ var builtins = map[string]primitiveFunc{
 	"=":   pEquals,
 }
 
-type primitiveFunc func(args []Sexp) (Sexp, error)
+type primitiveFunc func(args []Expression) (Expression, error)
 
-// TRUE represents a true boolean value
-const TRUE = sexpBool(true)
-
-// FALSE represents a false boolean value
-const FALSE = sexpBool(false)
-
-func pEquals(args []Sexp) (Sexp, error) {
+func pEquals(args []Expression) (Expression, error) {
 	// Return true if all the arguments are equal to each other in value
 	// and type.
 
 	if len(args) < 1 {
-		return FALSE, errors.New("wrong number of args for '=', must be at least one")
+		return FalseExpression, errors.New("wrong number of args for '=', must be at least one")
 	}
 
 	sentinel := args[0]
 
 	for _, a := range args[1:] {
-		if a != sentinel {
-			return FALSE, nil
+		if a.Equals(sentinel) {
+			return FalseExpression, nil
 		}
 	}
-	return TRUE, nil
+	return TrueExpression, nil
 }
 
-func primitiveAdd(args []Sexp) (Sexp, error) {
+func isIntegral(val float64) bool {
+	return val == float64(int64(val))
+}
+
+func primitiveAdd(args []Expression) (Expression, error) {
 	var result float64
 	for _, arg := range args {
-		switch x := arg.(type) {
-		case sexpFloat:
-			result = result + float64(x)
-		case sexpInteger:
-			result = result + float64(x)
+		switch arg.typ {
+		case ExpFloat:
+			result = result + float64(arg.float)
+		case ExpInteger:
+			result = result + float64(arg.integer)
 		default:
-			return nil, fmt.Errorf("unknown argument type, int/float expected, got [%#v]", x)
+			return NilExpression, fmt.Errorf("unknown argument type, int/float expected, got [%#v]", arg)
 		}
 	}
-	return sexpFloat(result), nil
+
+	if isIntegral(result) {
+		return NewExpr(ExpInteger, int64(result)), nil
+	}
+	return NewExpr(ExpFloat, result), nil
 }
 
-func primitiveMinus(args []Sexp) (Sexp, error) {
+func primitiveMinus(args []Expression) (Expression, error) {
 	if len(args) < 1 {
-		return nil, errors.New("'-' requires 1 or more args")
+		return NilExpression, errors.New("'-' requires 1 or more args")
 	}
 
 	var result float64
 
-	switch x := args[0].(type) {
-	case sexpFloat:
-		result = float64(x)
-	case sexpInteger:
-		result = float64(x)
+	switch args[0].typ {
+	case ExpFloat:
+		result = float64(args[0].float)
+	case ExpInteger:
+		result = float64(args[0].integer)
 	default:
-		return nil, fmt.Errorf("unknown argument type, int/float expected, got [%#v]", x)
+		return NilExpression, fmt.Errorf("unknown argument type, int/float expected, got [%#v]", args[0])
 	}
 
 	if len(args) == 1 {
-		return sexpFloat(-1.0 * result), nil
+		return NewExpr(ExpFloat, -1.0*result), nil
 	}
 
 	for _, arg := range args[1:] {
-		switch x := arg.(type) {
-		case sexpFloat:
-			result = result - float64(x)
-		case sexpInteger:
-			result = result - float64(x)
+		switch arg.typ {
+		case ExpFloat:
+			result = result - float64(arg.float)
+		case ExpInteger:
+			result = result - float64(arg.integer)
 		default:
-			return nil, fmt.Errorf("unknown argument type, int/float expected, got [%#v]", x)
+			return NilExpression, fmt.Errorf("unknown argument type, int/float expected, got [%#v]", arg)
 		}
 	}
-	return sexpFloat(result), nil
+	return NewExpr(ExpFloat, result), nil
 }
 
-func primitivePrn(args []Sexp) (Sexp, error) {
+func primitivePrn(args []Expression) (Expression, error) {
 	values := make([]string, 0)
 	for _, a := range args {
 		values = append(values, fmt.Sprintf("%v", a))
 	}
 	fmt.Println(strings.Join(values, " "))
-	return nil, nil
+	return NilExpression, nil
 }

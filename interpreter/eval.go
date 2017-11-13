@@ -20,87 +20,75 @@ import (
 	"fmt"
 )
 
-func apply(env *Environment, op Sexp, args []Sexp) (Sexp, error) {
+func apply(env Environment, op Expression, args []Expression) (Expression, error) {
 
 	theOp, err := Evaluate(env, op)
 	if err != nil {
-		return nil, err
+		return NilExpression, err
 	}
 
-	params := make([]Sexp, 0)
+	params := make([]Expression, 0)
 	for _, a := range args {
 		param, err := Evaluate(env, a)
 		if err != nil {
-			return nil, err
+			return NilExpression, err
 		}
 		params = append(params, param)
 	}
 
-	switch f := theOp.(type) {
-	case sexpPrimitive:
-		result, err := f(params)
+	if theOp.IsPrimitive() {
+		result, err := theOp.InvokePrimitive(params)
 		if err != nil {
-			return nil, err
+			return NilExpression, err
 		}
 		return result, nil
-	default:
-		return nil, fmt.Errorf("function not found: '%v'", f)
 	}
+
+	return NilExpression, fmt.Errorf("function not found: '%v'", theOp)
 }
 
-func isTruthy(sexp Sexp) bool {
-	if sexp == nil {
-		return false
+func evalIf(env Environment, exprs Expression) (Expression, error) {
+	argc := len(exprs.list)
+	if argc < 2 {
+		return NilExpression, fmt.Errorf("too few arguments (%v) to if", argc)
+	}
+	if argc > 3 {
+		return NilExpression, fmt.Errorf("too many arguments (%v) to if", argc)
 	}
 
-	switch t := sexp.(type) {
-	case sexpBool:
-		return bool(t)
-	}
-	return true
-}
-
-func evalIf(env *Environment, exprs []Sexp) (Sexp, error) {
-	if len(exprs) < 2 {
-		return nil, fmt.Errorf("too few arguments (%v) to if", len(exprs))
-	}
-	if len(exprs) > 3 {
-		return nil, fmt.Errorf("too many arguments (%v) to if", len(exprs))
-	}
-
-	test, err := Evaluate(env, exprs[0])
+	test, err := Evaluate(env, exprs.list[0])
 	if err != nil {
-		return nil, err
+		return NilExpression, err
 	}
 
-	var result Sexp
+	var result Expression
 
-	if isTruthy(test) {
-		result, err = Evaluate(env, exprs[1])
+	if test.IsTruthy() {
+		result, err = Evaluate(env, exprs.list[1])
 		if err != nil {
-			return nil, err
+			return NilExpression, err
 		}
-	} else if len(exprs) >= 3 {
-		result, err = Evaluate(env, exprs[2])
+	} else if argc >= 3 {
+		result, err = Evaluate(env, exprs.list[2])
 		if err != nil {
-			return nil, err
+			return NilExpression, err
 		}
 	}
 	return result, nil
 }
 
-func evalAnd(env *Environment, exprs []Sexp) (Sexp, error) {
+func evalAnd(env Environment, exprs Expression) (Expression, error) {
 
-	var result Sexp
+	var result Expression
 	var err error
 
-	for _, e := range exprs {
+	for _, e := range exprs.list {
 		result, err = Evaluate(env, e)
 		if err != nil {
-			return nil, err
+			return NilExpression, err
 		}
 
-		if !isTruthy(result) {
+		if !result.IsTruthy() {
 			return result, nil
 		}
 	}
@@ -108,18 +96,18 @@ func evalAnd(env *Environment, exprs []Sexp) (Sexp, error) {
 	return result, nil
 }
 
-func evalOr(env *Environment, exprs []Sexp) (Sexp, error) {
+func evalOr(env Environment, exprs Expression) (Expression, error) {
 
-	var result Sexp
+	var result Expression
 	var err error
 
-	for _, e := range exprs {
+	for _, e := range exprs.list {
 		result, err = Evaluate(env, e)
 		if err != nil {
-			return nil, err
+			return NilExpression, err
 		}
 
-		if isTruthy(result) {
+		if result.IsTruthy() {
 			return result, nil
 		}
 	}
@@ -127,46 +115,32 @@ func evalOr(env *Environment, exprs []Sexp) (Sexp, error) {
 }
 
 // Evaluate an expression
-func Evaluate(env *Environment, expr Sexp) (Sexp, error) {
+func Evaluate(env Environment, expr Expression) (Expression, error) {
 
-	switch t := expr.(type) {
-
-	case sexpList:
-		if t.StartsWith("and") {
-			return evalAnd(env, t.Tail())
-		}
-		if t.StartsWith("or") {
-			return evalOr(env, t.Tail())
-		}
-		if t.StartsWith("if") {
-			return evalIf(env, t.Tail())
-		}
-		return apply(env, t.Head(), t.Tail())
-
-	case sexpInteger:
-		return t, nil
-
-	case sexpFloat:
-		return t, nil
-
-	case sexpString:
-		return t, nil
-
-	case sexpQuote:
-		return t.quote, nil
-
-	case sexpSymbol:
-
-		found, value := env.Lookup(string(t))
+	if expr.IsSymbol() {
+		found, value := env.Lookup(expr.symbol)
 		if !found {
-			return nil, fmt.Errorf("value not found for '%v'", t.AsString())
+			return NilExpression, fmt.Errorf("value not found for '%v'", expr.String())
 		}
 		return Evaluate(env, value)
-
-	case sexpPrimitive:
-		return t, nil
-
-	default:
-		return nil, fmt.Errorf("can't parse [%v]", t)
 	}
+
+	if expr.IsAtom() {
+		return expr, nil
+	}
+
+	if expr.IsList() {
+		if expr.StartsWith("and") {
+			return evalAnd(env, expr.Tail())
+		}
+		if expr.StartsWith("or") {
+			return evalOr(env, expr.Tail())
+		}
+		if expr.StartsWith("if") {
+			return evalIf(env, expr.Tail())
+		}
+		return apply(env, expr.Head(), expr.Tail().list)
+	}
+
+	return NilExpression, fmt.Errorf("unable to eval expression [%v]", expr)
 }

@@ -51,8 +51,8 @@ func (p *Parser) notDone() bool {
 	return p.position+1 != len(p.tokens)
 }
 
-// Parse returns an s-expression suitable for interpretation.
-func (p *Parser) Parse() (Sexp, error) {
+// Parse2 returns an s-expression suitable for interpretation.
+func (p *Parser) Parse() (Expression, error) {
 	token := p.next()
 	switch token.kind {
 
@@ -60,34 +60,33 @@ func (p *Parser) Parse() (Sexp, error) {
 		return p.parseList()
 
 	case ASymbol:
-		return sexpSymbol(token.value), nil
+		return NewExpr(ExpSymbol, token.value), nil
 
 	case AString:
-		return sexpString(token.value), nil
+		return NewExpr(ExpString, token.value), nil
 
 	case AInteger:
 		i, _ := strconv.ParseInt(token.value, 10, 64)
-		return sexpInteger(i), nil
+		return NewExpr(ExpInteger, i), nil
 
 	case AFloat:
 		f, _ := strconv.ParseFloat(token.value, 64)
-		return sexpFloat(f), nil
+		return NewExpr(ExpFloat, f), nil
 
 	case AQuote:
 		sexp, err := p.Parse()
 		if err != nil {
 			return sexp, err
 		}
-		return sexpQuote{sexp}, nil
+		return NewExpr(ExpQuote, sexp), nil
 
 	default:
-		return sexpString("err"),
-			fmt.Errorf("unable to process token '%v'", token)
+		return NilExpression, fmt.Errorf("unable to process token '%v'", token)
 	}
 }
 
-func (p *Parser) parseList() (Sexp, error) {
-	list := make([]Sexp, 0)
+func (p *Parser) parseList() (Expression, error) {
+	list := make([]Expression, 0)
 
 done:
 	for p.notDone() {
@@ -98,7 +97,7 @@ done:
 		case AOpenParen:
 			sublist, err := p.parseList()
 			if err != nil {
-				return nil, err
+				return NilExpression, err
 			}
 			list = append(list, sublist)
 
@@ -114,5 +113,5 @@ done:
 			list = append(list, atom)
 		}
 	}
-	return sexpList(list), nil
+	return NewExpr(ExpList, list), nil
 }

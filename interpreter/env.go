@@ -16,59 +16,27 @@
 
 package interpreter
 
-// Frame contains a single scope of an environment.
-type Frame struct {
-	data map[string]Sexp
-}
-
-// Environment represents the values an expression can see.
+// Environment represents bindings
 type Environment struct {
-	frames []Frame
+	data map[string]Expression
 }
 
-// NewEnvironment returns a new environment.
-func NewEnvironment() *Environment {
-	frame := Frame{
-		data: make(map[string]Sexp, 0),
-	}
-
-	env := &Environment{
-		frames: []Frame{frame},
-	}
+// NewEnvironment contains bindings
+func NewEnvironment() Environment {
+	data := make(map[string]Expression, 0)
 
 	for name, fn := range builtins {
-		frame.set(name, sexpPrimitive(fn))
+		data[name] = NewExpr(ExpPrimitive, fn)
 	}
 
-	return env
+	return Environment{data: data}
 }
 
-// Extend the environment with a new binding.
-func (env *Environment) Extend(key string, value Sexp) {
-	index := len(env.frames) - 1
-	frame := env.frames[index]
-	frame.set(key, value)
-}
-
-// Lookup a value in the environment.
-func (env *Environment) Lookup(key string) (bool, Sexp) {
-	high := len(env.frames) - 1
-	for i := high; i >= 0; i-- {
-		if found, value := env.frames[i].lookup(key); found == true {
-			return true, value
-		}
-	}
-	return false, nil
-}
-
-func (frame *Frame) lookup(key string) (bool, Sexp) {
-	value := frame.data[key]
-	if value == nil {
-		return false, nil
+// Lookup a value in the environment
+func (env Environment) Lookup(key string) (bool, Expression) {
+	value := env.data[key]
+	if value.typ == 0 {
+		return false, NilExpression
 	}
 	return true, value
-}
-
-func (frame *Frame) set(key string, value Sexp) {
-	frame.data[key] = value
 }
