@@ -26,12 +26,12 @@ var builtins = map[string]primitiveFunc{
 	"+":   primitiveAdd,
 	"-":   primitiveMinus,
 	"prn": primitivePrn,
-	"=":   pEquals,
+	"=":   primitiveEquals,
 }
 
 type primitiveFunc func(args []Expression) (Expression, error)
 
-func pEquals(args []Expression) (Expression, error) {
+func primitiveEquals(args []Expression) (Expression, error) {
 	// Return true if all the arguments are equal to each other in value
 	// and type.
 
@@ -42,7 +42,7 @@ func pEquals(args []Expression) (Expression, error) {
 	sentinel := args[0]
 
 	for _, a := range args[1:] {
-		if a.Equals(sentinel) {
+		if !a.Equals(sentinel) {
 			return FalseExpression, nil
 		}
 	}
