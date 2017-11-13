@@ -125,6 +125,10 @@ func Evaluate(env Environment, expr Expression) (Expression, error) {
 		return Evaluate(env, value)
 	}
 
+	if expr.IsQuote() {
+		return *expr.quote, nil
+	}
+
 	if expr.IsAtom() {
 		return expr, nil
 	}

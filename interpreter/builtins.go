@@ -23,15 +23,52 @@ import (
 )
 
 var builtins = map[string]primitiveFunc{
-	"+":   primitiveAdd,
-	"-":   primitiveMinus,
-	"prn": primitivePrn,
-	"=":   primitiveEquals,
+	"+":    _add,
+	"-":    _minus,
+	"prn":  _prn,
+	"=":    _equals,
+	"head": _head,
+	"tail": _tail,
 }
 
 type primitiveFunc func(args []Expression) (Expression, error)
 
-func primitiveEquals(args []Expression) (Expression, error) {
+func isIntegral(val float64) bool {
+	return val == float64(int64(val))
+}
+
+func _head(args []Expression) (Expression, error) {
+	if len(args) == 0 {
+		return NilExpression, errors.New("head requires a parameter")
+	}
+
+	if !args[0].IsList() {
+		return NilExpression, errors.New("head requires a list parameter")
+	}
+
+	list := args[0].list
+	if len(list) == 0 {
+		return NilExpression, nil
+	}
+	return list[0], nil
+}
+
+func _tail(args []Expression) (Expression, error) {
+
+	if len(args) == 0 {
+		return NilExpression, errors.New("tail requires a parameter")
+	}
+
+	if !args[0].IsList() {
+		return NilExpression, errors.New("tail requires a list parameter")
+	}
+
+	list := args[0].list
+
+	return NewExpr(ExpList, list[1:]), nil
+}
+
+func _equals(args []Expression) (Expression, error) {
 	// Return true if all the arguments are equal to each other in value
 	// and type.
 
@@ -49,11 +86,7 @@ func primitiveEquals(args []Expression) (Expression, error) {
 	return TrueExpression, nil
 }
 
-func isIntegral(val float64) bool {
-	return val == float64(int64(val))
-}
-
-func primitiveAdd(args []Expression) (Expression, error) {
+func _add(args []Expression) (Expression, error) {
 	var result float64
 	for _, arg := range args {
 		switch arg.typ {
@@ -72,7 +105,7 @@ func primitiveAdd(args []Expression) (Expression, error) {
 	return NewExpr(ExpFloat, result), nil
 }
 
-func primitiveMinus(args []Expression) (Expression, error) {
+func _minus(args []Expression) (Expression, error) {
 	if len(args) < 1 {
 		return NilExpression, errors.New("'-' requires 1 or more args")
 	}
@@ -105,7 +138,7 @@ func primitiveMinus(args []Expression) (Expression, error) {
 	return NewExpr(ExpFloat, result), nil
 }
 
-func primitivePrn(args []Expression) (Expression, error) {
+func _prn(args []Expression) (Expression, error) {
 	values := make([]string, 0)
 	for _, a := range args {
 		values = append(values, fmt.Sprintf("%v", a))

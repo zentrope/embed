@@ -155,6 +155,8 @@ func (e Expression) String() string {
 		return fmt.Sprintf("%v", e.bool)
 	case ExpQuote:
 		return e.quote.String()
+	case ExpNil:
+		return "nil"
 	default:
 		return fmt.Sprintf("unknown→%#v", e)
 	}
@@ -183,6 +185,8 @@ func (e Expression) DebugString() string {
 		return fmt.Sprintf("bool→%v", e.bool)
 	case ExpQuote:
 		return "(quote " + e.quote.DebugString() + ")"
+	case ExpNil:
+		return "nil"
 	default:
 		return fmt.Sprintf("unknown→%#v", e)
 	}
@@ -206,6 +210,11 @@ func (e Expression) IsList() bool {
 // IsPrimitive returns true if expression is builtin function.
 func (e Expression) IsPrimitive() bool {
 	return e.typ == ExpPrimitive
+}
+
+// IsQuote returns true if expr is a quote
+func (e Expression) IsQuote() bool {
+	return e.typ == ExpQuote
 }
 
 // IsTruthy returns true of expr isn't false or nil.
