@@ -19,60 +19,7 @@ package interpreter
 import (
 	"fmt"
 	"strconv"
-	"strings"
 )
-
-// Sexp represents a parse s-expression
-type Sexp interface {
-	AsString() string
-}
-
-type sexpPrimitive primitiveFunc
-type sexpList []Sexp
-type sexpString string
-type sexpInteger int64
-type sexpFloat float64
-type sexpSymbol string
-type sexpBool bool
-type sexpQuote struct {
-	quote Sexp
-}
-
-func (s sexpBool) AsString() string {
-	return fmt.Sprintf("bool::%v", s)
-}
-
-func (s sexpPrimitive) AsString() string {
-	return fmt.Sprintf("builtin::%v", s)
-}
-
-func (s sexpQuote) AsString() string {
-	return "(quote " + s.quote.AsString() + ")"
-}
-
-func (s sexpList) AsString() string {
-	elems := make([]string, 0)
-	for _, e := range s {
-		elems = append(elems, e.AsString())
-	}
-	return fmt.Sprintf("(%v)", strings.Join(elems, " "))
-}
-
-func (s sexpString) AsString() string {
-	return "str::" + string(s)
-}
-
-func (s sexpInteger) AsString() string {
-	return fmt.Sprintf("int::%d", s)
-}
-
-func (s sexpFloat) AsString() string {
-	return fmt.Sprintf("float::%f", s)
-}
-
-func (s sexpSymbol) AsString() string {
-	return "sym::" + string(s)
-}
 
 // Parser represents the state of the parser.
 type Parser struct {

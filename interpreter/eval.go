@@ -48,15 +48,6 @@ func apply(env *Environment, op Sexp, args []Sexp) (Sexp, error) {
 	}
 }
 
-func isSpecial(key string, expr Sexp) bool {
-	switch t := expr.(type) {
-	case sexpSymbol:
-		return key == string(t)
-	default:
-		return false
-	}
-}
-
 func isTruthy(sexp Sexp) bool {
 	if sexp == nil {
 		return false
@@ -135,37 +126,22 @@ func evalOr(env *Environment, exprs []Sexp) (Sexp, error) {
 	return result, nil
 }
 
-func head(list []Sexp) Sexp {
-	if len(list) == 0 {
-		return nil
-	}
-	return list[0]
-}
-
-func tail(list []Sexp) []Sexp {
-	if len(list) == 0 {
-		return list
-	}
-	return list[1:]
-}
-
 // Evaluate an expression
 func Evaluate(env *Environment, expr Sexp) (Sexp, error) {
 
 	switch t := expr.(type) {
 
 	case sexpList:
-		op := head(t)
-		if isSpecial("and", op) {
-			return evalAnd(env, tail(t))
+		if t.StartsWith("and") {
+			return evalAnd(env, t.Tail())
 		}
-		if isSpecial("or", op) {
-			return evalOr(env, tail(t))
+		if t.StartsWith("or") {
+			return evalOr(env, t.Tail())
 		}
-		if isSpecial("if", op) {
-			return evalIf(env, tail(t))
+		if t.StartsWith("if") {
+			return evalIf(env, t.Tail())
 		}
-		return apply(env, head(t), tail(t))
+		return apply(env, t.Head(), t.Tail())
 
 	case sexpInteger:
 		return t, nil
