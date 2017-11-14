@@ -22,21 +22,27 @@ type Environment struct {
 }
 
 // NewEnvironment contains bindings
-func NewEnvironment() Environment {
+func NewEnvironment() *Environment {
 	data := make(map[string]Expression, 0)
 
 	for name, fn := range builtins {
 		data[name] = NewExpr(ExpPrimitive, fn)
 	}
 
-	return Environment{data: data}
+	return &Environment{data: data}
 }
 
 // Lookup a value in the environment
-func (env Environment) Lookup(key string) (bool, Expression) {
+func (env *Environment) Lookup(key string) (bool, Expression) {
 	value := env.data[key]
 	if value.typ == 0 {
 		return false, NilExpression
 	}
 	return true, value
 }
+
+// Set a value in the current environment frame
+func (env *Environment) Set(key Expression, value Expression) {
+	env.data[key.symbol] = value
+}
+

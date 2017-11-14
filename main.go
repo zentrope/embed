@@ -30,7 +30,7 @@ import (
 // fmt.Printf("-----\n")
 // }
 
-func eval(env interpreter.Environment, form string) {
+func eval(env *interpreter.Environment, form string) {
 	tokens, err := interpreter.Tokenize(form)
 	if err != nil {
 		fmt.Printf(" ~ %v\n", err)

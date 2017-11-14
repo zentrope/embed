@@ -207,6 +207,13 @@ func (e Expression) IsList() bool {
 	return e.typ == ExpList
 }
 
+func (e Expression) Size() int {
+	if e.IsList() {
+		return len(e.list)
+	}
+	return 1
+}
+
 // IsPrimitive returns true if expression is builtin function.
 func (e Expression) IsPrimitive() bool {
 	return e.typ == ExpPrimitive

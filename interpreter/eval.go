@@ -18,9 +18,10 @@ package interpreter
 
 import (
 	"fmt"
+	"errors"
 )
 
-func apply(env Environment, op Expression, args []Expression) (Expression, error) {
+func apply(env *Environment, op Expression, args []Expression) (Expression, error) {
 
 	theOp, err := Evaluate(env, op)
 	if err != nil {
@@ -47,7 +48,7 @@ func apply(env Environment, op Expression, args []Expression) (Expression, error
 	return NilExpression, fmt.Errorf("function not found: '%v'", theOp)
 }
 
-func evalIf(env Environment, exprs Expression) (Expression, error) {
+func evalIf(env *Environment, exprs Expression) (Expression, error) {
 	argc := len(exprs.list)
 	if argc < 2 {
 		return NilExpression, fmt.Errorf("too few arguments (%v) to if", argc)
@@ -77,7 +78,7 @@ func evalIf(env Environment, exprs Expression) (Expression, error) {
 	return result, nil
 }
 
-func evalAnd(env Environment, exprs Expression) (Expression, error) {
+func evalAnd(env *Environment, exprs Expression) (Expression, error) {
 
 	var result Expression
 	var err error
@@ -96,7 +97,7 @@ func evalAnd(env Environment, exprs Expression) (Expression, error) {
 	return result, nil
 }
 
-func evalOr(env Environment, exprs Expression) (Expression, error) {
+func evalOr(env *Environment, exprs Expression) (Expression, error) {
 
 	var result Expression
 	var err error
@@ -114,8 +115,31 @@ func evalOr(env Environment, exprs Expression) (Expression, error) {
 	return result, nil
 }
 
+func evalDef(env *Environment, name Expression, body Expression) (Expression, error) {
+
+	if ! name.IsSymbol() {
+		return NilExpression, errors.New("def name must be a symbol")
+	}
+
+	var value Expression
+	var err error
+
+	// Does this make sense?
+	if body.IsList() && body.Size() == 1 {
+		value, err = Evaluate(env, body.Head())
+	} else {
+		value, err = Evaluate(env, body)
+	}
+	if err != nil {
+		return NilExpression, err
+	}
+
+	env.Set(name, value)
+	return value, nil
+}
+
 // Evaluate an expression
-func Evaluate(env Environment, expr Expression) (Expression, error) {
+func Evaluate(env *Environment, expr Expression) (Expression, error) {
 
 	if expr.IsSymbol() {
 		found, value := env.Lookup(expr.symbol)
@@ -143,6 +167,11 @@ func Evaluate(env Environment, expr Expression) (Expression, error) {
 		if expr.StartsWith("if") {
 			return evalIf(env, expr.Tail())
 		}
+		if expr.StartsWith("def") {
+			def := expr.Tail()
+			return evalDef(env, def.Head(), def.Tail())
+		}
+		
 		return apply(env, expr.Head(), expr.Tail().list)
 	}
 
