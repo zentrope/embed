@@ -35,7 +35,7 @@ func NewEnvironment() *Environment {
 // Lookup a value in the environment
 func (env *Environment) Lookup(key string) (bool, Expression) {
 	value := env.data[key]
-	if value.typ == 0 {
+	if value.tag == 0 {
 		return false, NilExpression
 	}
 	return true, value
@@ -45,4 +45,3 @@ func (env *Environment) Lookup(key string) (bool, Expression) {
 func (env *Environment) Set(key Expression, value Expression) {
 	env.data[key.symbol] = value
 }
-

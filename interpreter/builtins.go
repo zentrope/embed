@@ -89,7 +89,7 @@ func _equals(args []Expression) (Expression, error) {
 func _add(args []Expression) (Expression, error) {
 	var result float64
 	for _, arg := range args {
-		switch arg.typ {
+		switch arg.tag {
 		case ExpFloat:
 			result = result + float64(arg.float)
 		case ExpInteger:
@@ -112,7 +112,7 @@ func _minus(args []Expression) (Expression, error) {
 
 	var result float64
 
-	switch args[0].typ {
+	switch args[0].tag {
 	case ExpFloat:
 		result = float64(args[0].float)
 	case ExpInteger:
@@ -126,7 +126,7 @@ func _minus(args []Expression) (Expression, error) {
 	}
 
 	for _, arg := range args[1:] {
-		switch arg.typ {
+		switch arg.tag {
 		case ExpFloat:
 			result = result - float64(arg.float)
 		case ExpInteger:

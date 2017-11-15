@@ -41,7 +41,7 @@ const (
 
 // Expression represents a computation
 type Expression struct {
-	typ       ExpressionType
+	tag       ExpressionType
 	hash      uint32
 	string    string
 	integer   int64
@@ -54,10 +54,10 @@ type Expression struct {
 }
 
 // NewExpr constructs a new expression of the given type
-func NewExpr(typ ExpressionType, value interface{}) Expression {
+func NewExpr(tag ExpressionType, value interface{}) Expression {
 
 	hash := fnv.New32()
-	if typ == ExpList {
+	if tag == ExpList {
 		for _, e := range value.([]Expression) {
 			fmt.Fprint(hash, e.hash)
 		}
@@ -65,8 +65,8 @@ func NewExpr(typ ExpressionType, value interface{}) Expression {
 		fmt.Fprint(hash, value)
 	}
 
-	e := Expression{typ: typ, hash: hash.Sum32()}
-	switch typ {
+	e := Expression{tag: tag, hash: hash.Sum32()}
+	switch tag {
 	case ExpPrimitive:
 		e.primitive = value.(primitiveFunc)
 	case ExpList:
@@ -85,13 +85,13 @@ func NewExpr(typ ExpressionType, value interface{}) Expression {
 		exp := value.(Expression)
 		e.quote = &exp
 	default:
-		log.Fatalf("unable to create new expr of type %v", typ)
+		log.Fatalf("unable to create new expr of type %v", tag)
 	}
 	return e
 }
 
 // NilExpression represents nil
-var NilExpression = Expression{typ: ExpNil}
+var NilExpression = Expression{tag: ExpNil}
 
 // TrueExpression for a boolean true
 var TrueExpression = NewExpr(ExpBool, true)
@@ -101,7 +101,7 @@ var FalseExpression = NewExpr(ExpBool, false)
 
 // StartsWith returns true if first elem in list is named prefix.
 func (e Expression) StartsWith(prefix string) bool {
-	if e.typ != ExpList {
+	if e.tag != ExpList {
 		return false
 	}
 
@@ -111,7 +111,7 @@ func (e Expression) StartsWith(prefix string) bool {
 
 // Head returns the first element of the list.
 func (e Expression) Head() Expression {
-	if e.typ != ExpList {
+	if e.tag != ExpList {
 		log.Fatalf("Can't take the head of a %v", e)
 	}
 
@@ -123,18 +123,18 @@ func (e Expression) Head() Expression {
 
 // Tail returns the rest of the elements of a list.
 func (e Expression) Tail() Expression {
-	if e.typ != ExpList {
+	if e.tag != ExpList {
 		log.Fatalf("Can't take the tail of a %v", e)
 	}
 
 	if len(e.list) == 0 {
 		return e
 	}
-	return Expression{typ: ExpList, list: e.list[1:]}
+	return Expression{tag: ExpList, list: e.list[1:]}
 }
 
 func (e Expression) String() string {
-	switch e.typ {
+	switch e.tag {
 	case ExpPrimitive:
 		return fmt.Sprintf("builtin::%v", e.primitive)
 	case ExpList:
@@ -164,7 +164,7 @@ func (e Expression) String() string {
 
 // DebugString provides type information for expressions
 func (e Expression) DebugString() string {
-	switch e.typ {
+	switch e.tag {
 	case ExpPrimitive:
 		return fmt.Sprintf("builtin::%v", e.primitive)
 	case ExpList:
@@ -194,7 +194,7 @@ func (e Expression) DebugString() string {
 
 // IsSymbol returns true if expression is a symbol
 func (e Expression) IsSymbol() bool {
-	return e.typ == ExpSymbol
+	return e.tag == ExpSymbol
 }
 
 // IsAtom returns true if expression is not a list
@@ -204,7 +204,7 @@ func (e Expression) IsAtom() bool {
 
 // IsList returns true if expression is a list
 func (e Expression) IsList() bool {
-	return e.typ == ExpList
+	return e.tag == ExpList
 }
 
 func (e Expression) Size() int {
@@ -216,21 +216,21 @@ func (e Expression) Size() int {
 
 // IsPrimitive returns true if expression is builtin function.
 func (e Expression) IsPrimitive() bool {
-	return e.typ == ExpPrimitive
+	return e.tag == ExpPrimitive
 }
 
 // IsQuote returns true if expr is a quote
 func (e Expression) IsQuote() bool {
-	return e.typ == ExpQuote
+	return e.tag == ExpQuote
 }
 
 // IsTruthy returns true of expr isn't false or nil.
 func (e Expression) IsTruthy() bool {
-	if e.typ == ExpNil {
+	if e.tag == ExpNil {
 		return false
 	}
 
-	if e.typ == ExpBool {
+	if e.tag == ExpBool {
 		return e.bool
 	}
 
