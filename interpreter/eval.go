@@ -17,9 +17,13 @@
 package interpreter
 
 import (
-	"fmt"
 	"errors"
+	"fmt"
 )
+
+func nilExpr(reason string, params ...interface{}) (Expression, error) {
+	return NilExpression, fmt.Errorf(reason, params...)
+}
 
 func apply(env *Environment, op Expression, args []Expression) (Expression, error) {
 
@@ -45,7 +49,17 @@ func apply(env *Environment, op Expression, args []Expression) (Expression, erro
 		return result, nil
 	}
 
-	return NilExpression, fmt.Errorf("function not found: '%v'", theOp)
+	if theOp.IsFunction() {
+		argc := len(args)
+		paramc := len(theOp.functionParams.list)
+		if argc != paramc {
+			return nilExpr("Function '%v' takes %v param(s), you provided %v", theOp.functionName, paramc, argc)
+		}
+		newEnv := env.ExtendEnvironment(*theOp.functionParams, args)
+		return Evaluate(newEnv, *theOp.functionBody)
+	}
+
+	return nilExpr("function not found: '%v'", theOp)
 }
 
 func evalIf(env *Environment, exprs Expression) (Expression, error) {
@@ -76,6 +90,24 @@ func evalIf(env *Environment, exprs Expression) (Expression, error) {
 		}
 	}
 	return result, nil
+}
+
+func evalDo(env *Environment, exprs Expression) (Expression, error) {
+
+	if !exprs.IsList() {
+		return Evaluate(env, exprs)
+	}
+
+	var result Expression
+	var err error
+
+	for _, e := range exprs.list {
+		result, err = Evaluate(env, e)
+		if err != nil {
+			return NilExpression, err
+		}
+	}
+	return result, err
 }
 
 func evalAnd(env *Environment, exprs Expression) (Expression, error) {
@@ -117,7 +149,7 @@ func evalOr(env *Environment, exprs Expression) (Expression, error) {
 
 func evalDef(env *Environment, name Expression, body Expression) (Expression, error) {
 
-	if ! name.IsSymbol() {
+	if !name.IsSymbol() {
 		return NilExpression, errors.New("def name must be a symbol")
 	}
 
@@ -136,6 +168,22 @@ func evalDef(env *Environment, name Expression, body Expression) (Expression, er
 
 	env.Set(name, value)
 	return value, nil
+}
+
+func evalFunction(env *Environment, name Expression, params Expression, body Expression) (Expression, error) {
+	fmt.Printf("name: %v, params: %v, body: %v\n", name, params, body)
+
+	if !name.IsSymbol() {
+		return nilExpr("defun name ← name must be a symbol")
+	}
+
+	if !params.IsList() {
+		return nilExpr("defun name (params) ← parameters must be a list")
+	}
+
+	f := NewFunctionExpr(name, params, body)
+	env.Set(name, f)
+	return f, nil
 }
 
 // Evaluate an expression
@@ -158,6 +206,9 @@ func Evaluate(env *Environment, expr Expression) (Expression, error) {
 	}
 
 	if expr.IsList() {
+		if expr.StartsWith("do") {
+			return evalDo(env, expr.Tail())
+		}
 		if expr.StartsWith("and") {
 			return evalAnd(env, expr.Tail())
 		}
@@ -171,7 +222,12 @@ func Evaluate(env *Environment, expr Expression) (Expression, error) {
 			def := expr.Tail()
 			return evalDef(env, def.Head(), def.Tail())
 		}
-		
+		if expr.StartsWith("defun") {
+			name := expr.Tail().Head()
+			params := expr.Tail().Tail().Head()
+			body := expr.Tail().Tail().Tail()
+			return evalFunction(env, name, params, body)
+		}
 		return apply(env, expr.Head(), expr.Tail().list)
 	}
 

@@ -16,32 +16,86 @@
 
 package interpreter
 
+type frameType map[string]Expression
+
 // Environment represents bindings
 type Environment struct {
-	data map[string]Expression
+	global frameType
+	frames []frameType
 }
 
 // NewEnvironment contains bindings
 func NewEnvironment() *Environment {
 	data := make(map[string]Expression, 0)
+	frames := make([]frameType, 0)
 
 	for name, fn := range builtins {
 		data[name] = NewExpr(ExpPrimitive, fn)
 	}
 
-	return &Environment{data: data}
+	return &Environment{global: data, frames: frames}
+}
+
+func (frame frameType) lookup(key string) (Expression, bool) {
+	value, found := frame[key]
+	if !found {
+		return NilExpression, false
+	}
+	return value, true
 }
 
 // Lookup a value in the environment
 func (env *Environment) Lookup(key string) (bool, Expression) {
-	value := env.data[key]
-	if value.tag == 0 {
-		return false, NilExpression
+
+	for i := len(env.frames) - 1; i >= 0; i-- {
+		value, found := env.frames[i].lookup(key)
+		if found {
+			return true, value
+		}
 	}
-	return true, value
+
+	value, found := env.global.lookup(key)
+	if found {
+		return true, value
+	}
+	return false, NilExpression
 }
 
 // Set a value in the current environment frame
 func (env *Environment) Set(key Expression, value Expression) {
-	env.data[key.symbol] = value
+	env.global[key.symbol] = value
+}
+
+func copyFrame(frame frameType) frameType {
+	newFrame := make(frameType, len(frame))
+	for k, v := range frame {
+		newFrame[k] = v
+	}
+	return newFrame
+}
+
+func copyFrames(frames []frameType) []frameType {
+	newFrames := make([]frameType, len(frames))
+	for _, frame := range frames {
+		newFrames = append(newFrames, copyFrame(frame))
+	}
+	return newFrames
+}
+
+// ExtendEnvironment returns a copy of the environment with new bindings.
+func (env *Environment) ExtendEnvironment(params Expression, args []Expression) *Environment {
+	global := copyFrame(env.global)
+	frames := copyFrames(env.frames)
+
+	frame := make(frameType, 0)
+	for i := 0; i < len(args); i++ {
+		frame[params.list[i].symbol] = args[i]
+	}
+
+	frames = append(frames, frame)
+
+	return &Environment{
+		global: global,
+		frames: frames,
+	}
 }

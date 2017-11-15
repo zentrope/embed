@@ -30,6 +30,7 @@ type ExpressionType int
 const (
 	ExpNil ExpressionType = iota
 	ExpPrimitive
+	ExpFunction
 	ExpList
 	ExpString
 	ExpInteger
@@ -41,31 +42,60 @@ const (
 
 // Expression represents a computation
 type Expression struct {
-	tag       ExpressionType
-	hash      uint32
-	string    string
-	integer   int64
-	float     float64
-	symbol    string
-	bool      bool
-	list      []Expression
-	quote     *Expression
-	primitive primitiveFunc
+	tag            ExpressionType
+	hash           uint32
+	string         string
+	integer        int64
+	float          float64
+	symbol         string
+	bool           bool
+	list           []Expression
+	quote          *Expression
+	primitive      primitiveFunc
+	functionName   string
+	functionParams *Expression
+	functionBody   *Expression
+}
+
+func hashIt(values ...interface{}) uint32 {
+	hash := fnv.New32()
+	for _, v := range values {
+		fmt.Fprint(hash, v)
+	}
+	return hash.Sum32()
+}
+
+// NewFunctionExpr returns an expression representing a function
+func NewFunctionExpr(name Expression, params Expression, body Expression) Expression {
+	p := params
+
+	do := NewExpr(ExpSymbol, "do")
+	doBody := NewExpr(ExpList, append([]Expression{do}, body.list...))
+
+	return Expression{
+		tag:            ExpFunction,
+		hash:           hashIt(ExpFunction, name, p.hash, doBody.hash),
+		functionName:   name.symbol,
+		functionParams: &p,
+		functionBody:   &doBody,
+	}
 }
 
 // NewExpr constructs a new expression of the given type
 func NewExpr(tag ExpressionType, value interface{}) Expression {
 
-	hash := fnv.New32()
+	data := make([]interface{}, 0)
+	data = append(data, tag)
+
 	if tag == ExpList {
 		for _, e := range value.([]Expression) {
-			fmt.Fprint(hash, e.hash)
+			data = append(data, e.hash)
 		}
 	} else {
-		fmt.Fprint(hash, value)
+		data = append(data, value)
 	}
 
-	e := Expression{tag: tag, hash: hash.Sum32()}
+	e := Expression{tag: tag, hash: hashIt(data...)}
 	switch tag {
 	case ExpPrimitive:
 		e.primitive = value.(primitiveFunc)
@@ -157,6 +187,8 @@ func (e Expression) String() string {
 		return e.quote.String()
 	case ExpNil:
 		return "nil"
+	case ExpFunction:
+		return fmt.Sprintf("fn<%v %v>", e.functionName, e.functionParams)
 	default:
 		return fmt.Sprintf("unknown→%#v", e)
 	}
@@ -207,6 +239,8 @@ func (e Expression) IsList() bool {
 	return e.tag == ExpList
 }
 
+// Size returns the number of elements in the expression, or 1 if it's
+// not a list.
 func (e Expression) Size() int {
 	if e.IsList() {
 		return len(e.list)
@@ -217,6 +251,11 @@ func (e Expression) Size() int {
 // IsPrimitive returns true if expression is builtin function.
 func (e Expression) IsPrimitive() bool {
 	return e.tag == ExpPrimitive
+}
+
+// IsFunction returns true of the expression represents a function
+func (e Expression) IsFunction() bool {
+	return e.tag == ExpFunction
 }
 
 // IsQuote returns true if expr is a quote
