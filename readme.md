@@ -17,7 +17,7 @@ This experiment is designed to be something you'd use to transform data accordin
 * [x] ~~append -- builtin list function~~
 * [x] ~~join -- builtin list function~~
 * [x] ~~anonymous "lambda" functions~~
-* [x] list -- builtin list function
+* [x] ~~list -- builtin list function~~
 * [ ] cond special form
 * [ ] prelude: map, reduce, filter, etc, written in the DSL itself
 * [ ] mutation

@@ -27,7 +27,6 @@ func nilExpr(reason string, params ...interface{}) (Expression, error) {
 
 func apply(env *Environment, op Expression, args []Expression) (Expression, error) {
 
-	fmt.Printf("apply: %v to %v\n", op, args)
 	theOp, err := Evaluate(env, op)
 	if err != nil {
 		return NilExpression, err
@@ -230,15 +229,12 @@ func evalLambda(env *Environment, params Expression, body Expression) (Expressio
 // Evaluate an expression
 func Evaluate(env *Environment, expr Expression) (Expression, error) {
 
-	fmt.Printf("eval: %v\n", expr)
-
 	if expr.IsSymbol() {
 		found, value := env.Lookup(expr.symbol)
 		if !found {
 			return nilExpr("value not found for '%v'", expr.String())
 		}
 		return value, nil
-		//		return Evaluate(env, value)
 	}
 
 	if expr.IsQuote() {
@@ -275,7 +271,6 @@ func Evaluate(env *Environment, expr Expression) (Expression, error) {
 			body := expr.Tail().Tail().Tail()
 			return evalFunction(env, name, params, body)
 		}
-		// (fn (x) (* 2 x))
 		if expr.StartsWith("fn") {
 			params := expr.Tail().Head()
 			body := expr.Tail().Tail()
