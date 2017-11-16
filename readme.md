@@ -12,8 +12,9 @@ This experiment is designed to be something you'd use to transform data accordin
 * [x] ~~top level definitions~~
 * [x] ~~top level functions~~
 * [x] ~~do expression (special)~~
-* [ ] let expression (special)
+* [x] ~~let special form~~
 * [ ] anonymous "lambda" functions
+* [ ] cond special form
 * [ ] prelude: map, reduce, filter, etc, written in the DSL itself
 * [ ] mutation
 * [ ] apply primitive
@@ -25,7 +26,12 @@ This experiment is designed to be something you'd use to transform data accordin
 * [ ] embed API for Golang programs
 * [ ] tests
 * [ ] load-code and load-data (handy for interactive dev/testing)
-* [ ] Fix: repl should read all forms before presenting prompt
+
+## issues
+
+* [ ] Repl should read all forms before presenting prompt
+* [ ] Def/un should always store in global env.
+* [ ] Pressing "return" in repl should not generate EOF error
 
 ## looks
 
@@ -36,16 +42,18 @@ Stuff you can do at the `repl` as of this writing.
 (def b 3)
 
 (defun add (x y)
-  (+ x y))
+  (let (i (+ a x)
+        j (+ b y))
+    (+ i j))
 
 => (add a b)
-5
+10
 
 => (add 10 b)
-13
+18
 ```
 
-## License
+## license
 
 Copyright (c) 2017 Keith Irwin
 

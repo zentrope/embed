@@ -55,11 +55,29 @@ func apply(env *Environment, op Expression, args []Expression) (Expression, erro
 		if argc != paramc {
 			return nilExpr("Function '%v' takes %v param(s), you provided %v", theOp.functionName, paramc, argc)
 		}
-		newEnv := env.ExtendEnvironment(*theOp.functionParams, args)
+
+		argv, err := evalList(env, args)
+		if err != nil {
+			return NilExpression, err
+		}
+
+		newEnv := env.ExtendEnvironment(*theOp.functionParams, argv)
 		return Evaluate(newEnv, *theOp.functionBody)
 	}
 
 	return nilExpr("function not found: '%v'", theOp)
+}
+
+func evalList(env *Environment, exprs []Expression) ([]Expression, error) {
+	results := make([]Expression, 0)
+	for _, e := range exprs {
+		result, err := Evaluate(env, e)
+		if err != nil {
+			return []Expression{}, err
+		}
+		results = append(results, result)
+	}
+	return results, nil
 }
 
 func evalIf(env *Environment, exprs Expression) (Expression, error) {
@@ -110,6 +128,36 @@ func evalDo(env *Environment, exprs Expression) (Expression, error) {
 	return result, err
 }
 
+func evalLet(env *Environment, clauses Expression, body Expression) (Expression, error) {
+
+	if !clauses.IsList() {
+		return nilExpr("let bindings should be a list (let (a 1 b 2) ...)")
+	}
+
+	if !(clauses.Size()%2 == 0) {
+		return nilExpr("let bindings must contain an even number of left/right pairs")
+	}
+
+	params := make([]Expression, 0)
+	args := make([]Expression, 0)
+
+	for i := 0; i < clauses.Size(); i = i + 2 {
+		param := clauses.list[i]
+		arg, err := Evaluate(env, clauses.list[i+1])
+		if err != nil {
+			return NilExpression, err
+		}
+
+		params = append(params, param)
+		args = append(args, arg)
+	}
+
+	newEnv := env.ExtendEnvironment(NewExpr(ExpList, params), args)
+	doBlock := WrapImplicitDo(body.list)
+
+	return Evaluate(newEnv, doBlock)
+}
+
 func evalAnd(env *Environment, exprs Expression) (Expression, error) {
 
 	var result Expression
@@ -153,15 +201,9 @@ func evalDef(env *Environment, name Expression, body Expression) (Expression, er
 		return NilExpression, errors.New("def name must be a symbol")
 	}
 
-	var value Expression
-	var err error
+	do := WrapImplicitDo(body.list)
+	value, err := Evaluate(env, do)
 
-	// Does this make sense?
-	if body.IsList() && body.Size() == 1 {
-		value, err = Evaluate(env, body.Head())
-	} else {
-		value, err = Evaluate(env, body)
-	}
 	if err != nil {
 		return NilExpression, err
 	}
@@ -192,7 +234,7 @@ func Evaluate(env *Environment, expr Expression) (Expression, error) {
 	if expr.IsSymbol() {
 		found, value := env.Lookup(expr.symbol)
 		if !found {
-			return NilExpression, fmt.Errorf("value not found for '%v'", expr.String())
+			return nilExpr("value not found for '%v'", expr.String())
 		}
 		return Evaluate(env, value)
 	}
@@ -208,6 +250,9 @@ func Evaluate(env *Environment, expr Expression) (Expression, error) {
 	if expr.IsList() {
 		if expr.StartsWith("do") {
 			return evalDo(env, expr.Tail())
+		}
+		if expr.StartsWith("let") {
+			return evalLet(env, expr.Tail().Head(), expr.Tail().Tail())
 		}
 		if expr.StartsWith("and") {
 			return evalAnd(env, expr.Tail())

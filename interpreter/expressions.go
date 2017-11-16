@@ -65,19 +65,23 @@ func hashIt(values ...interface{}) uint32 {
 	return hash.Sum32()
 }
 
+// WrapImplicitDo wraps an expression in a do block
+func WrapImplicitDo(body []Expression) Expression {
+	do := NewExpr(ExpSymbol, "do")
+	return NewExpr(ExpList, append([]Expression{do}, body...))
+}
+
 // NewFunctionExpr returns an expression representing a function
 func NewFunctionExpr(name Expression, params Expression, body Expression) Expression {
 	p := params
-
-	do := NewExpr(ExpSymbol, "do")
-	doBody := NewExpr(ExpList, append([]Expression{do}, body.list...))
+	b := WrapImplicitDo(body.list)
 
 	return Expression{
 		tag:            ExpFunction,
-		hash:           hashIt(ExpFunction, name, p.hash, doBody.hash),
+		hash:           hashIt(ExpFunction, name, p.hash, b.hash),
 		functionName:   name.symbol,
 		functionParams: &p,
-		functionBody:   &doBody,
+		functionBody:   &b,
 	}
 }
 
