@@ -31,6 +31,7 @@ const (
 	ExpNil ExpressionType = iota
 	ExpPrimitive
 	ExpFunction
+	ExpLambda
 	ExpList
 	ExpString
 	ExpInteger
@@ -55,6 +56,7 @@ type Expression struct {
 	functionName   string
 	functionParams *Expression
 	functionBody   *Expression
+	functionEnv    *Environment
 }
 
 func hashIt(values ...interface{}) uint32 {
@@ -63,6 +65,14 @@ func hashIt(values ...interface{}) uint32 {
 		fmt.Fprint(hash, v)
 	}
 	return hash.Sum32()
+}
+
+var genSymCounter = 0
+
+// GenSym produces a unique symbol name per runtime.
+func GenSym(prefix string) Expression {
+	genSymCounter = genSymCounter + 1
+	return NewExpr(ExpSymbol, fmt.Sprintf("%v%v", prefix, genSymCounter))
 }
 
 // WrapImplicitDo wraps an expression in a do block
@@ -82,6 +92,21 @@ func NewFunctionExpr(name Expression, params Expression, body Expression) Expres
 		functionName:   name.symbol,
 		functionParams: &p,
 		functionBody:   &b,
+	}
+}
+
+// NewLambdaExpr produces a new lambda expression (folding over environment)
+func NewLambdaExpr(env *Environment, name, params, body Expression) Expression {
+	p := params
+	b := body
+	e := env.Clone()
+	return Expression{
+		tag:            ExpLambda,
+		hash:           hashIt(ExpLambda, name, p.hash, b.hash, e),
+		functionName:   name.symbol,
+		functionParams: &p,
+		functionBody:   &b,
+		functionEnv:    e,
 	}
 }
 
@@ -191,7 +216,7 @@ func (e Expression) String() string {
 		return e.quote.String()
 	case ExpNil:
 		return "nil"
-	case ExpFunction:
+	case ExpFunction, ExpLambda:
 		return fmt.Sprintf("fn<%v %v>", e.functionName, e.functionParams)
 	default:
 		return fmt.Sprintf("unknown→%#v", e)
@@ -257,9 +282,15 @@ func (e Expression) IsPrimitive() bool {
 	return e.tag == ExpPrimitive
 }
 
-// IsFunction returns true of the expression represents a function
+// IsFunction returns true if the expression represents a function
 func (e Expression) IsFunction() bool {
 	return e.tag == ExpFunction
+}
+
+// IsLambda returns true if the expression represents an anonymous
+// function value
+func (e Expression) IsLambda() bool {
+	return e.tag == ExpLambda
 }
 
 // IsQuote returns true if expr is a quote

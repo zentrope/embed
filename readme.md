@@ -16,8 +16,8 @@ This experiment is designed to be something you'd use to transform data accordin
 * [x] ~~prepend -- builtin list function~~
 * [x] ~~append -- builtin list function~~
 * [x] ~~join -- builtin list function~~
-* [ ] list -- builtin list function
-* [ ] anonymous "lambda" functions
+* [x] ~~anonymous "lambda" functions~~
+* [x] list -- builtin list function
 * [ ] cond special form
 * [ ] prelude: map, reduce, filter, etc, written in the DSL itself
 * [ ] mutation
@@ -36,6 +36,8 @@ This experiment is designed to be something you'd use to transform data accordin
 * [ ] Repl should read all forms before presenting prompt
 * [ ] Def/un should always store in global env.
 * [ ] Pressing "return" in repl should not generate EOF error
+* [x] ~~`(map (fn (x) (+ 2 x)) (list 1 2 3))` tries to eval '1~~
+* [x] ~~`(map (fn (x) (+ 2 x)) '(1 2 3))` tries to eval '1~~
 
 ## looks
 
@@ -58,6 +60,39 @@ repl> (add 10 b)
 
 repl> (join '(1 2 3) (append '(a b) 'c) (prepend 'x '(y z)))
 (1 2 3 a b c x y z)
+
+;; Anonymous functions
+(defun addf (a f)
+  (+ a (f a)))
+
+repl> (addf 1 (fn (x) (+ x 10)))
+12
+
+;; Lexical scope
+(defun mk-addr (x)
+  (fn (y) (+ x y)))
+
+repl> (def add2 (mk-addr 2))
+fn<fn3 (y)>
+
+repl> (add2 1)
+3
+
+repl> (add2 1000)
+1002
+
+
+;; map
+(defun map (f xs)
+  (if (= xs '())
+    xs
+    (prepend (f (head xs)) (map f (tail xs)))))
+
+repl> (map (fn (x) (+ x 2)) '(10 20 30))
+(12 22 32)
+
+repl> (map (fn (x) (+ x 2)) (list (+ 10 10) (+ 20 20) (+ 40 40)))
+(22 42 82)
 
 ```
 

@@ -82,20 +82,27 @@ func copyFrames(frames []frameType) []frameType {
 	return newFrames
 }
 
-// ExtendEnvironment returns a copy of the environment with new bindings.
-func (env *Environment) ExtendEnvironment(params Expression, args []Expression) *Environment {
+// Clone returns a copy of the environment
+func (env *Environment) Clone() *Environment {
+	// Might want to keep a ptr to the global so all
+	// lambdas can reference forward defined vars.
 	global := copyFrame(env.global)
 	frames := copyFrames(env.frames)
+	return &Environment{
+		global: global,
+		frames: frames,
+	}
+}
+
+// ExtendEnvironment returns a copy of the environment with new bindings.
+func (env *Environment) ExtendEnvironment(params Expression, args []Expression) *Environment {
+	clone := env.Clone()
 
 	frame := make(frameType, 0)
 	for i := 0; i < len(args); i++ {
 		frame[params.list[i].symbol] = args[i]
 	}
 
-	frames = append(frames, frame)
-
-	return &Environment{
-		global: global,
-		frames: frames,
-	}
+	clone.frames = append(clone.frames, frame)
+	return clone
 }

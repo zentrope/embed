@@ -27,57 +27,46 @@ func nilExpr(reason string, params ...interface{}) (Expression, error) {
 
 func apply(env *Environment, op Expression, args []Expression) (Expression, error) {
 
+	fmt.Printf("apply: %v to %v\n", op, args)
 	theOp, err := Evaluate(env, op)
 	if err != nil {
 		return NilExpression, err
 	}
 
-	params := make([]Expression, 0)
+	argv := make([]Expression, 0)
 	for _, a := range args {
 		param, err := Evaluate(env, a)
 		if err != nil {
 			return NilExpression, err
 		}
-		params = append(params, param)
+		argv = append(argv, param)
 	}
 
+	// Primitive operator
 	if theOp.IsPrimitive() {
-		result, err := theOp.InvokePrimitive(params)
-		if err != nil {
-			return NilExpression, err
-		}
-		return result, nil
+		return theOp.InvokePrimitive(argv)
 	}
 
-	if theOp.IsFunction() {
-		argc := len(args)
-		paramc := len(theOp.functionParams.list)
-		if argc != paramc {
-			return nilExpr("Function '%v' takes %v param(s), you provided %v", theOp.functionName, paramc, argc)
-		}
+	argc := len(args)
+	paramc := len(theOp.functionParams.list)
+	if argc != paramc {
+		return nilExpr("function '%v' takes %v param(s), you provided %v", theOp.functionName, paramc, argc)
+	}
 
-		argv, err := evalList(env, args)
-		if err != nil {
-			return NilExpression, err
-		}
+	// Global function
+	if theOp.IsFunction() {
 
 		newEnv := env.ExtendEnvironment(*theOp.functionParams, argv)
 		return Evaluate(newEnv, *theOp.functionBody)
 	}
 
-	return nilExpr("function not found: '%v'", theOp)
-}
-
-func evalList(env *Environment, exprs []Expression) ([]Expression, error) {
-	results := make([]Expression, 0)
-	for _, e := range exprs {
-		result, err := Evaluate(env, e)
-		if err != nil {
-			return []Expression{}, err
-		}
-		results = append(results, result)
+	// Anonymous (lambda) function
+	if theOp.IsLambda() {
+		newEnv := theOp.functionEnv.ExtendEnvironment(*theOp.functionParams, argv)
+		return Evaluate(newEnv, *theOp.functionBody)
 	}
-	return results, nil
+
+	return nilExpr("function not found: '%v'", theOp)
 }
 
 func evalIf(env *Environment, exprs Expression) (Expression, error) {
@@ -213,7 +202,6 @@ func evalDef(env *Environment, name Expression, body Expression) (Expression, er
 }
 
 func evalFunction(env *Environment, name Expression, params Expression, body Expression) (Expression, error) {
-	fmt.Printf("name: %v, params: %v, body: %v\n", name, params, body)
 
 	if !name.IsSymbol() {
 		return nilExpr("defun name ← name must be a symbol")
@@ -228,15 +216,29 @@ func evalFunction(env *Environment, name Expression, params Expression, body Exp
 	return f, nil
 }
 
+func evalLambda(env *Environment, params Expression, body Expression) (Expression, error) {
+
+	if !params.IsList() {
+		return nilExpr("in (fn (params) (body)) ← params must be a list")
+	}
+
+	name := GenSym("fn") // necessary?
+	f := NewLambdaExpr(env, name, params, body.Head())
+	return f, nil
+}
+
 // Evaluate an expression
 func Evaluate(env *Environment, expr Expression) (Expression, error) {
+
+	fmt.Printf("eval: %v\n", expr)
 
 	if expr.IsSymbol() {
 		found, value := env.Lookup(expr.symbol)
 		if !found {
 			return nilExpr("value not found for '%v'", expr.String())
 		}
-		return Evaluate(env, value)
+		return value, nil
+		//		return Evaluate(env, value)
 	}
 
 	if expr.IsQuote() {
@@ -272,6 +274,12 @@ func Evaluate(env *Environment, expr Expression) (Expression, error) {
 			params := expr.Tail().Tail().Head()
 			body := expr.Tail().Tail().Tail()
 			return evalFunction(env, name, params, body)
+		}
+		// (fn (x) (* 2 x))
+		if expr.StartsWith("fn") {
+			params := expr.Tail().Head()
+			body := expr.Tail().Tail()
+			return evalLambda(env, params, body)
 		}
 		return apply(env, expr.Head(), expr.Tail().list)
 	}

@@ -32,12 +32,18 @@ var builtins = map[string]primitiveFunc{
 	"prepend": _prepend,
 	"append":  _append,
 	"join":    _join,
+	"list":    _list,
 }
 
 type primitiveFunc func(args []Expression) (Expression, error)
 
 func isIntegral(val float64) bool {
 	return val == float64(int64(val))
+}
+
+// (list x1 x2 ... xn)
+func _list(args []Expression) (Expression, error) {
+	return NewExpr(ExpList, args), nil
 }
 
 // (prepend x list)
