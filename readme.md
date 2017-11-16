@@ -4,6 +4,47 @@ A small interpreter to explore the idea of using a small language to create litt
 
 I'm thinking this is a kind of string processing kind of DSL. You can pass in a giant text file, and a bit of script and it can return parts of the file as a result, or build an aggregate out of it.
 
+## todo
+
+This experiment is designed to be something you'd use to transform data according to rules that are best expressed as regular code so I'm not going to worry too much about file IO or socket connections. You pass in a string, you get another string (or a collection of strings) back.
+
+* [x] ~~repl~~
+* [x] ~~top level definitions~~
+* [x] ~~top level functions~~
+* [x] ~~do expression (special)~~
+* [ ] let expression (special)
+* [ ] anonymous "lambda" functions
+* [ ] prelude: map, reduce, filter, etc, written in the DSL itself
+* [ ] mutation
+* [ ] apply primitive
+* [ ] varargs or &rest parameters
+* [ ] primitive: regex matching
+* [ ] primitive: regex group stuff
+* [ ] primitives: string functions (replace, replace-all, concat, starts, ends, trim, index, lastindex, ...).
+* [ ] comments
+* [ ] embed API for Golang programs
+* [ ] tests
+* [ ] load-code and load-data (handy for interactive dev/testing)
+* [ ] Fix: repl should read all forms before presenting prompt
+
+## looks
+
+Stuff you can do at the `repl` as of this writing.
+
+``` emacs-lisp
+(def a 2)
+(def b 3)
+
+(defun add (x y)
+  (+ x y))
+
+=> (add a b)
+5
+
+=> (add 10 b)
+13
+```
+
 ## License
 
 Copyright (c) 2017 Keith Irwin
