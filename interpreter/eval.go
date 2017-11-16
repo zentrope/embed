@@ -54,7 +54,6 @@ func apply(env *Environment, op Expression, args []Expression) (Expression, erro
 
 	// Global function
 	if theOp.IsFunction() {
-
 		newEnv := env.ExtendEnvironment(*theOp.functionParams, argv)
 		return Evaluate(newEnv, *theOp.functionBody)
 	}

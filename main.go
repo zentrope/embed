@@ -18,45 +18,70 @@ package main
 
 import (
 	"fmt"
+	"regexp"
+	"strings"
 
 	"github.com/chzyer/readline"
 	"github.com/zentrope/embed/interpreter"
 )
 
-// func exec(tokens *interpreter.Tokens) {
-//	for i, t := range tokens.Tokens {
-//		fmt.Printf(" - %2v %v\n", i, t)
-//	}
-// fmt.Printf("-----\n")
-// }
-
-func eval(env *interpreter.Environment, form string) {
+func eval(env *interpreter.Environment, form string) interpreter.Expression {
 	tokens, err := interpreter.Tokenize(form)
 	if err != nil {
 		fmt.Printf(" ~ %v\n", err)
+		return interpreter.NilExpression
 	}
-	// exec(tokens)
 
 	p := interpreter.NewParser(tokens)
 	expr, err := p.Parse()
 
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err)
-		return
+		return interpreter.NilExpression
 	}
-
-	// fmt.Printf("TREE: %v\n", expr.DebugString())
 
 	result, err := interpreter.Evaluate(env, expr)
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err)
+		return interpreter.NilExpression
 	} else {
-		fmt.Printf("%v\n", result)
+		return result
 	}
 }
 
 const promptRepl = "repl> "
 const promptMore = "   +> "
+
+var flatre = regexp.MustCompile(`\s+`)
+
+func flatten(s string) string {
+	return strings.TrimSpace(flatre.ReplaceAllString(s, " "))
+}
+
+func readAll(env *interpreter.Environment, reader *interpreter.Reader, coreload bool) {
+	for {
+		if reader.IsBalanced() {
+			form, err := reader.GetNextForm()
+			if err != nil {
+				if err == interpreter.ErrEOF {
+					break
+				}
+				fmt.Printf(" ERROR: %v\n", err)
+			}
+			if form == "" {
+				break
+			}
+
+			if coreload {
+				fmt.Printf("LOADING: %v\n", flatten(form))
+				eval(env, form)
+			} else {
+				fmt.Printf("%v\n", eval(env, form))
+			}
+			continue
+		}
+	}
+}
 
 func main() {
 	fmt.Println("Embed Project Repl")
@@ -71,6 +96,13 @@ func main() {
 	environment := interpreter.NewEnvironment()
 	reader := interpreter.NewReader()
 
+	// load core
+
+	reader.Append(interpreter.Core)
+	readAll(environment, reader, true)
+
+	// repl
+
 	for {
 
 		line, err := rl.Readline()
@@ -80,16 +112,9 @@ func main() {
 
 		reader.Append(line)
 
-		// TODO: Keep reading forms until exhausted.
 		if reader.IsBalanced() {
 			rl.SetPrompt(promptRepl)
-			form, err := reader.GetNextForm()
-			if err != nil {
-				fmt.Printf(" ERROR: %v\n", err)
-				continue
-			}
-
-			eval(environment, form)
+			readAll(environment, reader, false)
 
 		} else {
 			reader.Append("\n")

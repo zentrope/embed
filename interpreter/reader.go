@@ -58,11 +58,14 @@ func (reader *Reader) Append(line string) {
 	reader.buffer = append(reader.buffer, []rune(line)...)
 }
 
+// ErrEOF means there's nothing left to read
+var ErrEOF = errors.New("EOF")
+
 // GetNextForm returns the next available expression from the buffer.
 func (reader *Reader) GetNextForm() (string, error) {
 
 	if len(reader.buffer) == 0 {
-		return "", errors.New("EOF")
+		return "", ErrEOF
 	}
 
 	form := make([]rune, 0)

@@ -18,7 +18,8 @@ This experiment is designed to be something you'd use to transform data accordin
 * [x] ~~join -- builtin list function~~
 * [x] ~~anonymous "lambda" functions~~
 * [x] ~~list -- builtin list function~~
-* [ ] prelude: map, reduce, filter, etc, written in the DSL itself
+* [x] ~~load core/prelude functions (written in DSL)~~
+* [ ] implement prelude: ~~map~~, ~~reduce~~, ~~range~~, filter, in the DSL itself
 * [ ] cond special form
 * [ ] mutation
 * [ ] apply builtin
@@ -34,9 +35,9 @@ This experiment is designed to be something you'd use to transform data accordin
 
 ## issues
 
-* [ ] Repl should read all forms before presenting prompt
+* [x] ~~Repl should read all forms before presenting prompt~~
 * [ ] Def/un should always store in global env.
-* [ ] Pressing "return" in repl should not generate EOF error
+* [x] ~~Pressing "return" in repl should not generate EOF error~~
 * [x] ~~`(map (fn (x) (+ 2 x)) (list 1 2 3))` tries to eval '1~~
 * [x] ~~`(map (fn (x) (+ 2 x)) '(1 2 3))` tries to eval '1~~
 

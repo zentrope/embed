@@ -16,14 +16,17 @@
 
 package interpreter
 
-const core = `
+const Core = `
 (defun map (f xs)
 	(if (= xs '())
 		xs
 		(prepend (f (head xs)) (map f (tail xs)))))
 
 (defun reduce (f a xs)
-  (if (= xs '())
-      a
-      (reduce f (f a (head xs)) (tail xs))))
-`
+	(if (= xs '())
+		a
+		(reduce f (f a (head xs)) (tail xs))))
+
+(defun range (x)
+	(if (= x 0) (list 0)
+		(append (range (- x 1)) x)))`

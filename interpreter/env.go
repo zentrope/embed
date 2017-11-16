@@ -67,7 +67,7 @@ func (env *Environment) Set(key Expression, value Expression) {
 }
 
 func copyFrame(frame frameType) frameType {
-	newFrame := make(frameType, len(frame))
+	newFrame := make(frameType, 0)
 	for k, v := range frame {
 		newFrame[k] = v
 	}
@@ -75,7 +75,7 @@ func copyFrame(frame frameType) frameType {
 }
 
 func copyFrames(frames []frameType) []frameType {
-	newFrames := make([]frameType, len(frames))
+	newFrames := make([]frameType, 0)
 	for _, frame := range frames {
 		newFrames = append(newFrames, copyFrame(frame))
 	}
@@ -84,13 +84,10 @@ func copyFrames(frames []frameType) []frameType {
 
 // Clone returns a copy of the environment
 func (env *Environment) Clone() *Environment {
-	// Might want to keep a ptr to the global so all
-	// lambdas can reference forward defined vars.
-	global := copyFrame(env.global)
 	frames := copyFrames(env.frames)
 	return &Environment{
-		global: global,
 		frames: frames,
+		global: env.global,
 	}
 }
 
