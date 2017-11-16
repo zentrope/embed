@@ -181,7 +181,12 @@ func _minus(args []Expression) (Expression, error) {
 	}
 
 	if len(args) == 1 {
-		return NewExpr(ExpFloat, -1.0*result), nil
+		result = -1.0*result
+
+		if isIntegral(result) {
+			return NewExpr(ExpInteger, int64(result)), nil
+		}
+		return NewExpr(ExpFloat, result), nil
 	}
 
 	for _, arg := range args[1:] {
@@ -193,6 +198,9 @@ func _minus(args []Expression) (Expression, error) {
 		default:
 			return NilExpression, fmt.Errorf("unknown argument type, int/float expected, got [%#v]", arg)
 		}
+	}
+	if isIntegral(result) {
+		return NewExpr(ExpInteger, int64(result)), nil
 	}
 	return NewExpr(ExpFloat, result), nil
 }

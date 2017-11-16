@@ -21,4 +21,9 @@ const core = `
 	(if (= xs '())
 		xs
 		(prepend (f (head xs)) (map f (tail xs)))))
+
+(defun reduce (f a xs)
+  (if (= xs '())
+      a
+      (reduce f (f a (head xs)) (tail xs))))
 `

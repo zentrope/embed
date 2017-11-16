@@ -18,8 +18,8 @@ This experiment is designed to be something you'd use to transform data accordin
 * [x] ~~join -- builtin list function~~
 * [x] ~~anonymous "lambda" functions~~
 * [x] ~~list -- builtin list function~~
-* [ ] cond special form
 * [ ] prelude: map, reduce, filter, etc, written in the DSL itself
+* [ ] cond special form
 * [ ] mutation
 * [ ] apply builtin
 * [ ] varargs or &rest parameters
@@ -30,6 +30,7 @@ This experiment is designed to be something you'd use to transform data accordin
 * [ ] embed API for Golang programs
 * [ ] tests
 * [ ] load-code and load-data (handy for interactive dev/testing)
+* [ ] consider a [cps](https://stackoverflow.com/a/5986168) interpreter (recursion is a killer)
 
 ## issues
 
