@@ -13,15 +13,19 @@ This experiment is designed to be something you'd use to transform data accordin
 * [x] ~~top level functions~~
 * [x] ~~do expression (special)~~
 * [x] ~~let special form~~
+* [x] ~~prepend -- builtin list function~~
+* [x] ~~append -- builtin list function~~
+* [x] ~~join -- builtin list function~~
+* [ ] list -- builtin list function
 * [ ] anonymous "lambda" functions
 * [ ] cond special form
 * [ ] prelude: map, reduce, filter, etc, written in the DSL itself
 * [ ] mutation
-* [ ] apply primitive
+* [ ] apply builtin
 * [ ] varargs or &rest parameters
-* [ ] primitive: regex matching
-* [ ] primitive: regex group stuff
-* [ ] primitives: string functions (replace, replace-all, concat, starts, ends, trim, index, lastindex, ...).
+* [ ] builtin: regex matching
+* [ ] builtin: regex group stuff
+* [ ] builtins: string functions (replace, replace-all, concat, starts, ends, trim, index, lastindex, split, ...).
 * [ ] comments
 * [ ] embed API for Golang programs
 * [ ] tests
@@ -46,11 +50,15 @@ Stuff you can do at the `repl` as of this writing.
         j (+ b y))
     (+ i j))
 
-=> (add a b)
+repl> (add a b)
 10
 
-=> (add 10 b)
+repl> (add 10 b)
 18
+
+repl> (join '(1 2 3) (append '(a b) 'c) (prepend 'x '(y z)))
+(1 2 3 a b c x y z)
+
 ```
 
 ## license

@@ -23,18 +23,71 @@ import (
 )
 
 var builtins = map[string]primitiveFunc{
-	"+":    _add,
-	"-":    _minus,
-	"prn":  _prn,
-	"=":    _equals,
-	"head": _head,
-	"tail": _tail,
+	"+":       _add,
+	"-":       _minus,
+	"prn":     _prn,
+	"=":       _equals,
+	"head":    _head,
+	"tail":    _tail,
+	"prepend": _prepend,
+	"append":  _append,
+	"join":    _join,
 }
 
 type primitiveFunc func(args []Expression) (Expression, error)
 
 func isIntegral(val float64) bool {
 	return val == float64(int64(val))
+}
+
+// (prepend x list)
+func _prepend(args []Expression) (Expression, error) {
+
+	if len(args) < 2 {
+		return nilExpr("prepend requires two params: item, list")
+	}
+
+	item := args[0]
+	list := args[1]
+
+	if list.tag != ExpList {
+		return nilExpr("prepend: 2nd parameter must be a list")
+	}
+
+	return NewExpr(ExpList, append([]Expression{item}, list.list...)), nil
+}
+
+// (append list x)
+func _append(args []Expression) (Expression, error) {
+	if len(args) != 2 {
+		return nilExpr("append takes two args (list, item), you provided %v", len(args))
+	}
+
+	list := args[0]
+	item := args[1]
+
+	if list.tag != ExpList {
+		return nilExpr("append's first arg (list, item) must be a list")
+	}
+
+	return NewExpr(ExpList, append(list.list, item)), nil
+}
+
+// (join list1 list2 ... listn)
+func _join(args []Expression) (Expression, error) {
+
+	for _, e := range args {
+		if e.tag != ExpList {
+			return nilExpr("join takes only list params, %v is not a list", e)
+		}
+	}
+
+	newList := make([]Expression, 0)
+	for _, l := range args {
+		newList = append(newList, l.list...)
+	}
+
+	return NewExpr(ExpList, newList), nil
 }
 
 func _head(args []Expression) (Expression, error) {

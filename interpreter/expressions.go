@@ -178,7 +178,7 @@ func (e Expression) String() string {
 		}
 		return fmt.Sprintf("(%v)", strings.Join(elems, " "))
 	case ExpString:
-		return e.string
+		return "\"" + e.string + "\""
 	case ExpInteger:
 		return fmt.Sprintf("%d", e.integer)
 	case ExpFloat:
