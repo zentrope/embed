@@ -42,10 +42,8 @@ const (
 func NewInterpreter(kind Type) Interpreter {
 	switch kind {
 	case TCO:
-		fmt.Println("returning tco interp")
 		return TcoInterpreter{}
 	default:
-		fmt.Println("returning naive interp")
 		return NaiveInterpreter{}
 	}
 }

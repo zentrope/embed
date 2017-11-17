@@ -20,6 +20,7 @@ This experiment is designed to be something you'd use to transform data accordin
 * [x] ~~list -- builtin list function~~
 * [x] ~~load core/prelude functions (written in DSL)~~
 * [x] ~~implement prelude: map, reduce, range, filter~~
+* [ ] figure out a better way to do math logic builtins
 * [ ] cond special form
 * [ ] mutation
 * [ ] apply -- builtin function
@@ -32,7 +33,7 @@ This experiment is designed to be something you'd use to transform data accordin
 * [ ] tests
 * [ ] load-code and load-data (handy for interactive dev/testing)
 * [ ] consider map, reduce, filter as builtins
-* [ ] try a tail-call optimized evaluator?
+* [x] ~~try a tail-call optimized evaluator?~~
 * [ ] consider a [cps](https://stackoverflow.com/a/5986168) interpreter (recursion is a killer)
 
 ## issues

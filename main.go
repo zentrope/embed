@@ -40,9 +40,7 @@ func eval(lang interpreter.Interpreter, env *interpreter.Environment, form strin
 		return interpreter.NilExpression
 	}
 
-	interpreter.Count = 0
 	result, err := lang.Evaluate(env, expr)
-	fmt.Printf(" - count %v\n", interpreter.Count)
 
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err)
