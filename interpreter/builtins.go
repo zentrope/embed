@@ -19,6 +19,7 @@ package interpreter
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -33,12 +34,49 @@ var builtins = map[string]primitiveFunc{
 	"append":  _append,
 	"join":    _join,
 	"list":    _list,
+	"not":     _not,
+	"mod":     _mod,
 }
 
 type primitiveFunc func(args []Expression) (Expression, error)
 
 func isIntegral(val float64) bool {
 	return val == float64(int64(val))
+}
+
+func _mod(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc != 2 {
+		return nilExpr("(mod num div) takes 2 args, you provided %v", argc)
+	}
+
+	num := args[0]
+	div := args[1]
+
+	n := num.float
+	d := div.float
+
+	if num.tag == ExpInteger {
+		n = float64(num.integer)
+	}
+	if div.tag == ExpInteger {
+		d = float64(div.integer)
+	}
+
+	result := math.Mod(n, d)
+
+	if isIntegral(result) {
+		return NewExpr(ExpInteger, int64(result)), nil
+	}
+	return NewExpr(ExpFloat, result), nil
+}
+
+func _not(args []Expression) (Expression, error) {
+	if len(args) > 1 {
+		return nilExpr("(not expr) takes one parameter, you provided %v", len(args))
+	}
+
+	return NewExpr(ExpBool, !args[0].IsTruthy()), nil
 }
 
 // (list x1 x2 ... xn)
@@ -181,7 +219,7 @@ func _minus(args []Expression) (Expression, error) {
 	}
 
 	if len(args) == 1 {
-		result = -1.0*result
+		result = -1.0 * result
 
 		if isIntegral(result) {
 			return NewExpr(ExpInteger, int64(result)), nil

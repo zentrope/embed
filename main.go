@@ -44,9 +44,9 @@ func eval(env *interpreter.Environment, form string) interpreter.Expression {
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err)
 		return interpreter.NilExpression
-	} else {
-		return result
 	}
+
+	return result
 }
 
 const promptRepl = "repl> "

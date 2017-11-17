@@ -16,6 +16,7 @@
 
 package interpreter
 
+// Core functions
 const Core = `
 (defun map (f xs)
 	(if (= xs '())
@@ -27,6 +28,20 @@ const Core = `
 		a
 		(reduce f (f a (head xs)) (tail xs))))
 
+(defun filter (f xs)
+	(if (= xs '())
+		xs
+		(let (x (head xs))
+			(if (f x)
+				(prepend x (filter f (tail xs)))
+				(filter f (tail xs))))))
+
 (defun range (x)
 	(if (= x 0) (list 0)
-		(append (range (- x 1)) x)))`
+		(append (range (- x 1)) x)))
+
+(defun even? (x)
+	(= (mod x 2) 0))
+
+(defun odd? (x)
+	(not (even? x)))`

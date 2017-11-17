@@ -19,24 +19,27 @@ This experiment is designed to be something you'd use to transform data accordin
 * [x] ~~anonymous "lambda" functions~~
 * [x] ~~list -- builtin list function~~
 * [x] ~~load core/prelude functions (written in DSL)~~
-* [ ] implement prelude: ~~map~~, ~~reduce~~, ~~range~~, filter, in the DSL itself
+* [x] ~~implement prelude: map, reduce, range, filter~~
 * [ ] cond special form
 * [ ] mutation
-* [ ] apply builtin
+* [ ] apply -- builtin function
 * [ ] varargs or &rest parameters
 * [ ] builtin: regex matching
 * [ ] builtin: regex group stuff
-* [ ] builtins: string functions (replace, replace-all, concat, starts, ends, trim, index, lastindex, split, ...).
+* [ ] builtins: string functions
 * [ ] comments
 * [ ] embed API for Golang programs
 * [ ] tests
 * [ ] load-code and load-data (handy for interactive dev/testing)
+* [ ] consider map, reduce, filter as builtins
+* [ ] try a tail-call optimized evaluator?
 * [ ] consider a [cps](https://stackoverflow.com/a/5986168) interpreter (recursion is a killer)
 
 ## issues
 
+* [ ] def and defun should always store in global env
+* [ ] load/reader for core messes up with blanks at end of string
 * [x] ~~Repl should read all forms before presenting prompt~~
-* [ ] Def/un should always store in global env.
 * [x] ~~Pressing "return" in repl should not generate EOF error~~
 * [x] ~~`(map (fn (x) (+ 2 x)) (list 1 2 3))` tries to eval '1~~
 * [x] ~~`(map (fn (x) (+ 2 x)) '(1 2 3))` tries to eval '1~~
