@@ -24,24 +24,102 @@ import (
 )
 
 var builtins = map[string]primitiveFunc{
+	"*":       _mult,
 	"+":       _add,
 	"-":       _minus,
-	"prn":     _prn,
+	"<":       _lessThan,
 	"=":       _equals,
-	"head":    _head,
-	"tail":    _tail,
-	"prepend": _prepend,
 	"append":  _append,
+	"head":    _head,
 	"join":    _join,
 	"list":    _list,
-	"not":     _not,
 	"mod":     _mod,
+	"not":     _not,
+	"prepend": _prepend,
+	"prn":     _prn,
+	"tail":    _tail,
 }
 
 type primitiveFunc func(args []Expression) (Expression, error)
 
 func isIntegral(val float64) bool {
 	return val == float64(int64(val))
+}
+
+func verifyNums(args []Expression) error {
+	for _, arg := range args {
+		switch arg.tag {
+		case ExpInteger, ExpFloat:
+			continue
+		default:
+			return errors.New("all arguments must be numbers")
+		}
+	}
+	return nil
+}
+
+func asNumber(expr Expression) (float64, error) {
+	switch expr.tag {
+	case ExpInteger:
+		return float64(expr.integer), nil
+	case ExpFloat:
+		return expr.float, nil
+	default:
+		return 0, errors.New("not a number")
+	}
+}
+
+func toExpr(x float64) Expression {
+	if isIntegral(x) {
+		return NewExpr(ExpInteger, int64(x))
+	}
+	return NewExpr(ExpFloat, x)
+}
+
+func _mult(args []Expression) (Expression, error) {
+	if err := verifyNums(args); err != nil {
+		return NilExpression, err
+	}
+	result := 1.0
+	for _, arg := range args {
+		num, err := asNumber(arg)
+		if err != nil {
+			return NilExpression, err
+		}
+		result = result * num
+	}
+	return toExpr(result), nil
+}
+
+func _lessThan(args []Expression) (Expression, error) {
+
+	argc := len(args)
+
+	if argc < 1 {
+		return nilExpr("(< a b ... n) requires at least 1 arg")
+	}
+
+	if err := verifyNums(args); err != nil {
+		return NilExpression, err
+	}
+
+	sentinel, err := asNumber(args[0])
+	if err != nil {
+		return NilExpression, err
+	}
+
+	for _, arg := range args[1:] {
+		candidate, err := asNumber(arg)
+		if err != nil {
+			return NilExpression, err
+		}
+		if candidate <= sentinel {
+			return FalseExpression, nil
+		}
+		sentinel = candidate
+	}
+
+	return TrueExpression, nil
 }
 
 func _mod(args []Expression) (Expression, error) {

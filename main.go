@@ -25,7 +25,7 @@ import (
 	"github.com/zentrope/embed/interpreter"
 )
 
-func eval(env *interpreter.Environment, form string) interpreter.Expression {
+func eval(lang interpreter.Interpreter, env *interpreter.Environment, form string) interpreter.Expression {
 	tokens, err := interpreter.Tokenize(form)
 	if err != nil {
 		fmt.Printf(" ~ %v\n", err)
@@ -40,7 +40,10 @@ func eval(env *interpreter.Environment, form string) interpreter.Expression {
 		return interpreter.NilExpression
 	}
 
-	result, err := interpreter.Evaluate(env, expr)
+	interpreter.Count = 0
+	result, err := lang.Evaluate(env, expr)
+	fmt.Printf(" - count %v\n", interpreter.Count)
+
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err)
 		return interpreter.NilExpression
@@ -58,7 +61,10 @@ func flatten(s string) string {
 	return strings.TrimSpace(flatre.ReplaceAllString(s, " "))
 }
 
-func readAll(env *interpreter.Environment, reader *interpreter.Reader, coreload bool) {
+func readAll(
+	lang interpreter.Interpreter,
+	env *interpreter.Environment,
+	reader *interpreter.Reader, coreload bool) {
 	for {
 		if reader.IsBalanced() {
 			form, err := reader.GetNextForm()
@@ -74,9 +80,9 @@ func readAll(env *interpreter.Environment, reader *interpreter.Reader, coreload 
 
 			if coreload {
 				fmt.Printf("LOADING: %v\n", flatten(form))
-				eval(env, form)
+				eval(lang, env, form)
 			} else {
-				fmt.Printf("%v\n", eval(env, form))
+				fmt.Printf("%v\n", eval(lang, env, form))
 			}
 			continue
 		}
@@ -93,13 +99,18 @@ func main() {
 
 	defer rl.Close()
 
+	// lang := interpreter.NewInterpreter(interpreter.Naive)
+	// fmt.Println("Naive interpreter")
+	lang := interpreter.NewInterpreter(interpreter.TCO)
+	fmt.Println("TCO interpreter")
+
 	environment := interpreter.NewEnvironment()
 	reader := interpreter.NewReader()
 
 	// load core
 
 	reader.Append(interpreter.Core)
-	readAll(environment, reader, true)
+	readAll(lang, environment, reader, true)
 
 	// repl
 
@@ -114,7 +125,7 @@ func main() {
 
 		if reader.IsBalanced() {
 			rl.SetPrompt(promptRepl)
-			readAll(environment, reader, false)
+			readAll(lang, environment, reader, false)
 
 		} else {
 			reader.Append("\n")

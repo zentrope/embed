@@ -36,14 +36,6 @@ func NewEnvironment() *Environment {
 	return &Environment{global: data, frames: frames}
 }
 
-func (frame frameType) lookup(key string) (Expression, bool) {
-	value, found := frame[key]
-	if !found {
-		return NilExpression, false
-	}
-	return value, true
-}
-
 // Lookup a value in the environment
 func (env *Environment) Lookup(key string) (bool, Expression) {
 
@@ -66,22 +58,6 @@ func (env *Environment) Set(key Expression, value Expression) {
 	env.global[key.symbol] = value
 }
 
-func copyFrame(frame frameType) frameType {
-	newFrame := make(frameType, 0)
-	for k, v := range frame {
-		newFrame[k] = v
-	}
-	return newFrame
-}
-
-func copyFrames(frames []frameType) []frameType {
-	newFrames := make([]frameType, 0)
-	for _, frame := range frames {
-		newFrames = append(newFrames, copyFrame(frame))
-	}
-	return newFrames
-}
-
 // Clone returns a copy of the environment
 func (env *Environment) Clone() *Environment {
 	frames := copyFrames(env.frames)
@@ -102,4 +78,28 @@ func (env *Environment) ExtendEnvironment(params Expression, args []Expression) 
 
 	clone.frames = append(clone.frames, frame)
 	return clone
+}
+
+func (frame frameType) lookup(key string) (Expression, bool) {
+	value, found := frame[key]
+	if !found {
+		return NilExpression, false
+	}
+	return value, true
+}
+
+func copyFrame(frame frameType) frameType {
+	newFrame := make(frameType, 0)
+	for k, v := range frame {
+		newFrame[k] = v
+	}
+	return newFrame
+}
+
+func copyFrames(frames []frameType) []frameType {
+	newFrames := make([]frameType, 0)
+	for _, frame := range frames {
+		newFrames = append(newFrames, copyFrame(frame))
+	}
+	return newFrames
 }

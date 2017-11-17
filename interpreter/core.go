@@ -40,6 +40,14 @@ const Core = `
 	(if (= x 0) (list 0)
 		(append (range (- x 1)) x)))
 
+(defun factorial (n)
+	(factorial' 1 n))
+
+(defun factorial' (product n)
+	(if (< n 2)
+		product
+		(factorial' (* product n) (- n 1))))
+
 (defun even? (x)
 	(= (mod x 2) 0))
 
