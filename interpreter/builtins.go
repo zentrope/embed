@@ -30,6 +30,7 @@ var builtins = map[string]primitiveFunc{
 	"<":       _lessThan,
 	"=":       _equals,
 	"append":  _append,
+	"count":   _count,
 	"head":    _head,
 	"join":    _join,
 	"list":    _list,
@@ -74,6 +75,15 @@ func toExpr(x float64) Expression {
 		return NewExpr(ExpInteger, int64(x))
 	}
 	return NewExpr(ExpFloat, x)
+}
+
+func _count(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc < 1 {
+		return nilExpr("(count lst) ← lst should be a list")
+	}
+
+	return NewExpr(ExpInteger, int64(len(args[0].list))), nil
 }
 
 func _mult(args []Expression) (Expression, error) {

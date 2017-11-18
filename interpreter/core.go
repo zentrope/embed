@@ -53,3 +53,15 @@ const Core = `
 
 (defun odd? (x)
 	(not (even? x)))`
+
+// This won't work until "let" allows for recursive definitions.
+const deck = `
+(defun take (x lst)
+	(let (take' (fn (a ls)
+								(if (= ls '())
+										a
+										(if (= (count ls) x)
+											a
+											(take' (append a (head ls)) (tail ls)))))
+		(take' '() lst)))
+`
