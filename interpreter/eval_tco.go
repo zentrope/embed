@@ -169,7 +169,7 @@ func (x TcoInterpreter) evalDef(env *Environment, name, body Expression) (Expres
 	return value, nil
 }
 
-func (x TcoInterpreter) evalDefun(env *Environment, name Expression, params Expression, body Expression) (Expression, error) {
+func (x TcoInterpreter) evalDefun(env *Environment, name, params Expression, body Expression) (Expression, error) {
 
 	if !name.IsSymbol() {
 		return nilExpr("defun name ← name must be a symbol")
@@ -184,7 +184,7 @@ func (x TcoInterpreter) evalDefun(env *Environment, name Expression, params Expr
 	return f, nil
 }
 
-func (x TcoInterpreter) evalLambda(env *Environment, params Expression, body Expression) (Expression, error) {
+func (x TcoInterpreter) evalLambda(env *Environment, params, body Expression) (Expression, error) {
 
 	if !params.IsList() {
 		return nilExpr("in (fn (params) (body)) ← params must be a list")
