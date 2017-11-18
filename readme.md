@@ -8,35 +8,44 @@ I'm thinking this is a kind of string processing kind of DSL. You can pass in a 
 
 This experiment is designed to be something you'd use to transform data according to rules that are best expressed as regular code so I'm not going to worry too much about file IO or socket connections. You pass in a string, you get another string (or a collection of strings) back.
 
+### interpreter
+
+* [ ] **let** should allow recursive bindings
+* [ ] **cond** special form
+* [ ] mutation (Clojure's swap!/reset!)
+* [ ] **&rest** parameters
+* [ ] comments
+* [ ] embed API for Golang programs
+* [ ] tests
+* [ ] load-code and load-data (handy for interactive dev/testing)
+* [ ] consider a [cps](https://stackoverflow.com/a/5986168) interpreter (try/catch?)
+* [ ] support for laziness for processing large files?
 * [x] ~~repl~~
 * [x] ~~top level definitions~~
 * [x] ~~top level functions~~
 * [x] ~~do expression (special)~~
 * [x] ~~let special form~~
-* [x] ~~prepend -- builtin list function~~
-* [x] ~~append -- builtin list function~~
-* [x] ~~join -- builtin list function~~
 * [x] ~~anonymous "lambda" functions~~
-* [x] ~~list -- builtin list function~~
 * [x] ~~load core/prelude functions (written in DSL)~~
 * [x] ~~implement prelude: map, reduce, range, filter~~
-* [ ] figure out a better way to do math logic builtins
-* [ ] cond special form
-* [ ] mutation
+* [x] ~~try a tail-call optimized interpreter?~~
+
+### builtins
+
+* [ ] map data structure and associated functions
+* [ ] consider map, reduce, filter as builtins
 * [ ] apply -- builtin function
-* [ ] varargs or &rest parameters
 * [ ] builtin: regex matching
 * [ ] builtin: regex group stuff
 * [ ] builtins: string functions
-* [ ] comments
-* [ ] embed API for Golang programs
-* [ ] tests
-* [ ] load-code and load-data (handy for interactive dev/testing)
-* [ ] consider map, reduce, filter as builtins
-* [x] ~~try a tail-call optimized evaluator?~~
-* [ ] consider a [cps](https://stackoverflow.com/a/5986168) interpreter (recursion is a killer)
+* [ ] figure out a better way to do math logic builtins
+* [ ] ~~count~~
+* [x] ~~list -- builtin list function~~
+* [x] ~~prepend -- builtin list function~~
+* [x] ~~append -- builtin list function~~
+* [x] ~~join -- builtin list function~~
 
-## issues
+### issues
 
 * [ ] def and defun should always store in global env
 * [ ] load/reader for core messes up with blanks at end of string
