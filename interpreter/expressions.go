@@ -41,6 +41,34 @@ const (
 	ExpQuote
 )
 
+// ExprTypeName returns the type name of an expression type
+func ExprTypeName(v ExpressionType) string {
+	names := map[ExpressionType]string{
+		ExpNil:       "nil",
+		ExpPrimitive: "primitive",
+		ExpFunction:  "function",
+		ExpLambda:    "lambda",
+		ExpList:      "list",
+		ExpString:    "string",
+		ExpInteger:   "integer",
+		ExpFloat:     "float",
+		ExpSymbol:    "symbol",
+		ExpBool:      "bool",
+		ExpQuote:     "quote",
+	}
+
+	value, ok := names[v]
+	if !ok {
+		return "unknown"
+	}
+	return value
+}
+
+// Type returns the type name of an expression
+func (e Expression) Type() string {
+	return ExprTypeName(e.tag)
+}
+
 // Expression represents a computation
 type Expression struct {
 	tag            ExpressionType
@@ -79,6 +107,14 @@ func GenSym(prefix string) Expression {
 func WrapImplicitDo(body []Expression) Expression {
 	do := NewExpr(ExpSymbol, "do")
 	return NewExpr(ExpList, append([]Expression{do}, body...))
+}
+
+// WithLambda returns an expression wrapped in a lambda
+func WithLambda(env *Environment, body Expression) Expression {
+	fn := NewExpr(ExpSymbol, "fn")
+	params := NewExpr(ExpList, []Expression{})
+	result := NewLambdaExpr(env, fn, params, body)
+	return result
 }
 
 // NewFunctionExpr returns an expression representing a function
@@ -216,7 +252,9 @@ func (e Expression) String() string {
 		return e.quote.String()
 	case ExpNil:
 		return "nil"
-	case ExpFunction, ExpLambda:
+	case ExpLambda:
+		return fmt.Sprintf("lambda<%v|%v %v>", e.functionName, e.functionParams, e.functionBody)
+	case ExpFunction:
 		return fmt.Sprintf("fn<%v %v>", e.functionName, e.functionParams)
 	default:
 		return fmt.Sprintf("unknown→%#v", e)
@@ -256,6 +294,11 @@ func (e Expression) DebugString() string {
 // IsSymbol returns true if expression is a symbol
 func (e Expression) IsSymbol() bool {
 	return e.tag == ExpSymbol
+}
+
+// IsInteger returns true if expression is an integer
+func (e Expression) IsInteger() bool {
+	return e.tag == ExpInteger
 }
 
 // IsAtom returns true if expression is not a list
@@ -311,6 +354,11 @@ func (e Expression) IsTruthy() bool {
 	return true
 }
 
+// IsInvokable if it can be called
+func (e Expression) IsInvokable() bool {
+	return e.tag == ExpFunction || e.tag == ExpPrimitive || e.tag == ExpLambda
+}
+
 // InvokePrimitive returns the results of a functino application.
 func (e Expression) InvokePrimitive(params []Expression) (Expression, error) {
 	return e.primitive(params)
@@ -319,4 +367,35 @@ func (e Expression) InvokePrimitive(params []Expression) (Expression, error) {
 // Equals returns true of the values of e1 and e2 match
 func (e Expression) Equals(e2 Expression) bool {
 	return e.hash == e2.hash
+}
+
+// IntValue of the expression
+func (e Expression) IntValue() int64 {
+	return e.integer
+}
+
+// Testing help
+
+// IsEqual to expression
+func (e Expression) IsEqual(value interface{}) bool {
+	switch v := value.(type) {
+	case int:
+		return int(e.integer) == v
+	case int64:
+		return e.integer == v
+	case float64:
+		return e.float == v
+	case string:
+		return e.string == v || e.symbol == v
+	case []int64:
+		// TODO more efficent to convert e to ints, than this
+		exprs := make([]Expression, 0)
+		for _, i := range v {
+			exprs = append(exprs, NewExpr(ExpInteger, i))
+		}
+		return e.Equals(NewExpr(ExpList, exprs))
+	default:
+		fmt.Printf("equality value '%v' of unknown type\n", value)
+		return false
+	}
 }

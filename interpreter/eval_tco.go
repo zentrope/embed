@@ -34,6 +34,11 @@ func (x TcoInterpreter) evalList(env *Environment, args []Expression) ([]Express
 }
 
 func isValidArity(fn Expression, args []Expression) (bool, error) {
+
+	if !fn.IsInvokable() {
+		return false, fmt.Errorf("fn '%v' (%v) is not invokable", fn, fn.Type())
+	}
+
 	argc := len(args)
 	paramc := len(fn.functionParams.list)
 	if argc == paramc {
@@ -80,24 +85,33 @@ func (x TcoInterpreter) evalLet(env *Environment, clauses, body Expression) (*En
 			errors.New("let bindings must contain an even number of left/right pairs")
 	}
 
-	params := make([]Expression, 0)
-	args := make([]Expression, 0)
-
-	for i := 0; i < clauses.Size(); i = i + 2 {
-		param := clauses.list[i]
-		arg, err := x.Evaluate(env, clauses.list[i+1])
-		if err != nil {
-			return env, NilExpression, err
-		}
-
-		params = append(params, param)
-		args = append(args, arg)
+	if clauses.Size() == 0 {
+		return env, body, nil
 	}
 
-	newEnv := env.ExtendEnvironment(NewExpr(ExpList, params), args)
-	doBlock := WrapImplicitDo(body.list)
+	params := make([]Expression, 0)
+	lambdas := make([]Expression, 0)
+	for i := 0; i < clauses.Size(); i += 2 {
+		params = append(params, clauses.list[i])
+		lambdas = append(lambdas, WithLambda(env, clauses.list[i+1]))
+	}
 
-	return newEnv, doBlock, nil
+	envPass2 := env.ExtendEnvironment(NewExpr(ExpList, params), lambdas)
+
+	vs2 := make([]Expression, 0)
+
+	for i := 0; i < clauses.Size(); i += 2 {
+		f := NewLambdaExpr(envPass2, GenSym("fn"), NewExpr(ExpList, []Expression{}), clauses.list[i+1])
+		vs2 = append(vs2, f)
+	}
+
+	envPass2 = env.ExtendEnvironment(NewExpr(ExpList, params), vs2)
+
+	for i := 0; i < len(vs2); i++ {
+		vs2[i].functionEnv = envPass2
+	}
+	doBlock := WrapImplicitDo(body.list)
+	return envPass2, doBlock, nil
 }
 
 func (x TcoInterpreter) evalAnd(env *Environment, exprs Expression) (Expression, error) {
@@ -185,13 +199,17 @@ func (x TcoInterpreter) evalDefun(env *Environment, name, params Expression, bod
 }
 
 func (x TcoInterpreter) evalLambda(env *Environment, params, body Expression) (Expression, error) {
-
 	if !params.IsList() {
 		return nilExpr("in (fn (params) (body)) ← params must be a list")
 	}
 
-	f := NewLambdaExpr(env, GenSym("lambda"), params, body.Head())
+	f := NewLambdaExpr(env, GenSym("fn"), params, body.Head())
 	return f, nil
+}
+
+func print(pattern string, args ...interface{}) {
+	// fmt.Printf(pattern, args...)
+	// fmt.Println()
 }
 
 // Evaluate is a TCO version of the evaluator. I think.
@@ -199,7 +217,7 @@ func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression,
 	var err error
 
 	for {
-
+		print("{:expr %v :type %v}", expr, expr.Type())
 		switch expr.tag {
 
 		case ExpSymbol:
@@ -207,12 +225,21 @@ func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression,
 			if !found {
 				return nilExpr("value not found for '%v'", expr.String())
 			}
-			return value, nil
+			print("lookup: {:expr `%v` :value `%v` :type `%v`}", expr, value, value.Type())
+			if value.IsLambda() && len(value.functionParams.list) == 0 {
+				// A thunk which should be evaluated in current environment
+				print("THUNK: %v %v", expr, value)
+				expr = *value.functionBody
+			} else {
+				// print("lookup: {:expr `%v` :value `%v` :type `%v`}", expr, value, value.Type())
+				return value, nil
+			}
 
 		case ExpQuote:
 			return *expr.quote, nil
 
-		case ExpInteger, ExpString, ExpFloat:
+		case ExpInteger, ExpString, ExpFloat, ExpBool:
+			print(" return scalar: `%v`", expr)
 			return expr, nil
 
 		case ExpList:
@@ -235,9 +262,15 @@ func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression,
 
 			case "do":
 				expr, err = x.evalDo(env, rest)
+				if err != nil {
+					return NilExpression, err
+				}
 
 			case "let":
 				env, expr, err = x.evalLet(env, rest.Head(), rest.Tail())
+				if err != nil {
+					return NilExpression, err
+				}
 
 			case "def":
 				return x.evalDef(env, rest.Head(), rest.Tail())
@@ -254,35 +287,54 @@ func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression,
 				return x.evalLambda(env, params, body)
 
 			default: // apply
+				print("Evalusing %v for function", first)
+
 				fn, err := x.Evaluate(env, first)
 				if err != nil {
 					return NilExpression, err
 				}
 
+				if !fn.IsInvokable() {
+					println("Not invokable.")
+				}
+
+				print("Evaluating function '%v' args '%v'", first, rest)
 				argv, err := x.evalList(env, rest.list)
 				if err != nil {
 					return NilExpression, err
 				}
 
+				print("apply: {:fn `%v` :type %v :argv %v}", fn, fn.Type(), argv)
+
+				print("is primitive?")
 				if fn.IsPrimitive() {
-					return fn.InvokePrimitive(argv)
+					ret, err := fn.InvokePrimitive(argv)
+					print(" return: %v (%v)", ret, err)
+					return ret, err
+					// return fn.InvokePrimitive(argv)
 				}
 
+				print("is arity?")
 				ok, err := isValidArity(fn, rest.list)
 				if !ok {
 					return NilExpression, err
 				}
 
 				if fn.IsLambda() {
+					print(" fn is lambda")
 					env = fn.functionEnv.ExtendEnvironment(*fn.functionParams, argv)
 					expr = *fn.functionBody
 				} else if fn.IsFunction() {
+					print(" fn is function")
 					env = env.ExtendEnvironment(*fn.functionParams, argv)
 					expr = *fn.functionBody
 				} else {
+					print(" fn is not invokable")
 					return nilExpr("unable to apply %v", fn)
 				}
 			}
 		}
-	}
+
+	} // for
+
 }

@@ -16,6 +16,8 @@
 
 package interpreter
 
+import "fmt"
+
 type frameType map[string]Expression
 
 // Environment represents bindings
@@ -38,6 +40,13 @@ func NewEnvironment() *Environment {
 
 // Lookup a value in the environment
 func (env *Environment) Lookup(key string) (bool, Expression) {
+	if key == "true" {
+		return true, TrueExpression
+	}
+
+	if key == "false" {
+		return true, FalseExpression
+	}
 
 	for i := len(env.frames) - 1; i >= 0; i-- {
 		value, found := env.frames[i].lookup(key)
@@ -53,8 +62,8 @@ func (env *Environment) Lookup(key string) (bool, Expression) {
 	return false, NilExpression
 }
 
-// Set a value in the current environment frame
-func (env *Environment) Set(key Expression, value Expression) {
+// Set a value in the global environment frame
+func (env *Environment) Set(key, value Expression) {
 	env.global[key.symbol] = value
 }
 
@@ -64,6 +73,18 @@ func (env *Environment) Clone() *Environment {
 	return &Environment{
 		frames: frames,
 		global: env.global,
+	}
+}
+
+// Dump stack frames
+func (env *Environment) Dump() {
+	for i, f := range env.frames {
+		for k, v := range f {
+			fmt.Printf(" frame[%v]: `%v` → `%v`\n", i, k, v)
+			if v.IsLambda() {
+				v.functionEnv.Dump()
+			}
+		}
 	}
 }
 

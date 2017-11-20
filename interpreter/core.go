@@ -29,16 +29,39 @@ const Core = `
 		(reduce f (f a (head xs)) (tail xs))))
 
 (defun filter (f xs)
+	(prn "-------->" xs)
 	(if (= xs '())
 		xs
-		(let (x (head xs))
+		(let (x (head xs)
+					y (tail xs))
+			(prn "xxxxxxxxxxxxxxxxxxxxxxxxxx " x)
+			(prn "yyyyyyyyyyyyyyyyyyyyyyyyyy " y)
 			(if (f x)
-				(prepend x (filter f (tail xs)))
+				(prepend x (filter f y))
+				(filter f y)))))
+
+(defun filter (f xs)
+	(if (= xs '())
+		xs
+		(let (x (head xs)
+					y (tail xs))
+			(if (f (head xs))
+				(prepend (head xs) (filter f (tail xs)))
 				(filter f (tail xs))))))
 
+(defun dec (x)
+	(- x 1))
+
+(defun inc (x)
+	(+ x 1))
+
+(defun range' (x)
+	(if (= x 0)
+		(list 0)
+		(append (range' (- x 1)) x)))
+
 (defun range (x)
-	(if (= x 0) (list 0)
-		(append (range (- x 1)) x)))
+	(range' (- x 1)))
 
 (defun factorial (n)
 	(factorial' 1 n))
@@ -47,6 +70,13 @@ const Core = `
 	(if (< n 2)
 		product
 		(factorial' (* product n) (- n 1))))
+
+(defun take (x lst)
+	(let (take2 (fn (accum ls)
+								(if (or (= ls '()) (= (count accum) x))
+									accum
+									(take2 (append accum (head ls)) (tail ls)))))
+		(take2 '() lst)))
 
 (defun even? (x)
 	(= (mod x 2) 0))

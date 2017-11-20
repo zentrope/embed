@@ -280,7 +280,7 @@ func _add(args []Expression) (Expression, error) {
 		case ExpInteger:
 			result = result + float64(arg.integer)
 		default:
-			return NilExpression, fmt.Errorf("unknown argument type, int/float expected, got [%#v]", arg)
+			return nilExpr("unknown argument type, int/float expected, got [%v]", arg.Type())
 		}
 	}
 
@@ -291,8 +291,13 @@ func _add(args []Expression) (Expression, error) {
 }
 
 func _minus(args []Expression) (Expression, error) {
+
 	if len(args) < 1 {
-		return NilExpression, errors.New("'-' requires 1 or more args")
+		return NilExpression, errors.New("`-` requires 1 or more args")
+	}
+
+	if err := verifyNums(args); err != nil {
+		return NilExpression, err
 	}
 
 	var result float64
@@ -303,7 +308,7 @@ func _minus(args []Expression) (Expression, error) {
 	case ExpInteger:
 		result = float64(args[0].integer)
 	default:
-		return NilExpression, fmt.Errorf("unknown argument type, int/float expected, got [%#v]", args[0])
+		return nilExpr("unknown argument type, int/float expected, got [%v]", args[0].Type())
 	}
 
 	if len(args) == 1 {
@@ -322,9 +327,10 @@ func _minus(args []Expression) (Expression, error) {
 		case ExpInteger:
 			result = result - float64(arg.integer)
 		default:
-			return NilExpression, fmt.Errorf("unknown argument type, int/float expected, got [%#v]", arg)
+			return nilExpr("unknown argument type, int/float expected, got [%v]", arg.Type())
 		}
 	}
+
 	if isIntegral(result) {
 		return NewExpr(ExpInteger, int64(result)), nil
 	}

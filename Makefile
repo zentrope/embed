@@ -14,10 +14,11 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+PACKAGE = github.com/zentrope/embed
 BINARY = embed
 TREE = tree
 
-.PHONY: help init vendor
+.PHONY: godep vendor build clean dist-clean tree test help
 .DEFAULT_GOAL := help
 
 godep:
@@ -39,6 +40,15 @@ dist-clean: clean ## Clean everything, including vendor.
 
 tree: ## View source hierarchy without vendor pkgs
 	$(TREE) -C -I "vendor"
+
+test: ## Run tests
+	go test $(PACKAGE)/scraelang/
+
+testv: ## Run tests in verbose mode
+	go test -v $(PACKAGE)/scraelang/
+
+init: ## Initialize the project
+	$(MAKE) vendor
 
 help: ## Produce this list of goals
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
