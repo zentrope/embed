@@ -86,6 +86,7 @@ func TestLetRecursive(t *testing.T) {
 		{"integer", int64(2), `(let (a 1 b (+ a 1)) b)`},
 		{"integer", int64(0), `(let (a (fn (x) (if (= x 0) x (a (- x 1))))) (a 13))`},
 		{"integer", int64(3), `(let (x 1) (let (a 2 b (fn () (+ a x))) (b))) `},
+		{"integer", int64(4), `(do (defun foo (x) (let (a (+ x 1)) a)) (foo 3))`},
 		{"list", []int64{1, 3, 5, 7, 9}, `(filter (fn (x) (odd? x)) (range 10))`},
 	}
 	for _, row := range table {
