@@ -22,29 +22,29 @@ import (
 	"strings"
 
 	"github.com/chzyer/readline"
-	"github.com/zentrope/embed/interpreter"
+	haki "github.com/zentrope/haki/lang"
 )
 
-func eval(lang interpreter.Interpreter, env *interpreter.Environment, form string) interpreter.Expression {
-	tokens, err := interpreter.Tokenize(form)
+func eval(interpreter haki.Interpreter, env *haki.Environment, form string) haki.Expression {
+	tokens, err := haki.Tokenize(form)
 	if err != nil {
 		fmt.Printf(" ~ %v\n", err)
-		return interpreter.NilExpression
+		return haki.NilExpression
 	}
 
-	p := interpreter.NewParser(tokens)
+	p := haki.NewParser(tokens)
 	expr, err := p.Parse()
 
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err)
-		return interpreter.NilExpression
+		return haki.NilExpression
 	}
 
-	result, err := lang.Evaluate(env, expr)
+	result, err := interpreter.Evaluate(env, expr)
 
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err)
-		return interpreter.NilExpression
+		return haki.NilExpression
 	}
 
 	return result
@@ -60,14 +60,14 @@ func flatten(s string) string {
 }
 
 func readAll(
-	lang interpreter.Interpreter,
-	env *interpreter.Environment,
-	reader *interpreter.Reader, coreload bool) {
+	interpreter haki.Interpreter,
+	env *haki.Environment,
+	reader *haki.Reader, coreload bool) {
 	for {
 		if reader.IsBalanced() {
 			form, err := reader.GetNextForm()
 			if err != nil {
-				if err == interpreter.ErrEOF {
+				if err == haki.ErrEOF {
 					break
 				}
 				fmt.Printf(" ERROR: %v\n", err)
@@ -78,9 +78,9 @@ func readAll(
 
 			if coreload {
 				fmt.Printf("LOADING: %v\n", flatten(form))
-				eval(lang, env, form)
+				eval(interpreter, env, form)
 			} else {
-				fmt.Printf("%v\n", eval(lang, env, form))
+				fmt.Printf("%v\n", eval(interpreter, env, form))
 			}
 			continue
 		}
@@ -97,17 +97,17 @@ func main() {
 
 	defer rl.Close()
 
-	// lang := interpreter.NewInterpreter(interpreter.Naive)
+	// lang := haki.NewInterpreter(haki.Naive)
 	// fmt.Println("Naive interpreter")
-	lang := interpreter.NewInterpreter(interpreter.TCO)
+	lang := haki.NewInterpreter(haki.TCO)
 	fmt.Println("TCO interpreter")
 
-	environment := interpreter.NewEnvironment()
-	reader := interpreter.NewReader()
+	environment := haki.NewEnvironment()
+	reader := haki.NewReader()
 
 	// load core
 
-	reader.Append(interpreter.Core)
+	reader.Append(haki.Core)
 	readAll(lang, environment, reader, true)
 
 	// repl

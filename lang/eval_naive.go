@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-package interpreter
+package lang
 
 import (
 	"errors"
@@ -111,6 +111,7 @@ func (x NaiveInterpreter) evalDo(env *Environment, exprs Expression) (Expression
 	return result, err
 }
 
+// NOTE: This has diverged from the TCO version
 func (x NaiveInterpreter) evalLet(env *Environment, clauses Expression, body Expression) (Expression, error) {
 
 	if !clauses.IsList() {

@@ -14,39 +14,37 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 
-package scraelang
+package test
 
 import (
 	"fmt"
-	"regexp"
-	"strings"
 	"testing"
 
-	"github.com/zentrope/embed/interpreter"
+	haki "github.com/zentrope/haki/lang"
 )
 
-var NIL = interpreter.NilExpression
+var NIL = haki.NilExpression
 
-var flatre = regexp.MustCompile(`\s+`)
+// var flatre = regexp.MustCompile(`\s+`)
 
-func flatten(s string) string {
-	return strings.TrimSpace(flatre.ReplaceAllString(s, " "))
-}
+// func flatten(s string) string {
+//	return strings.TrimSpace(flatre.ReplaceAllString(s, " "))
+// }
 
-func evalForm(form string) (interpreter.Expression, error) {
+func evalForm(form string) (haki.Expression, error) {
 
-	lang := interpreter.NewInterpreter(interpreter.TCO)
-	env := interpreter.NewEnvironment()
-	reader := interpreter.NewReader()
-	reader.Append(interpreter.Core)
+	lang := haki.NewInterpreter(haki.TCO)
+	env := haki.NewEnvironment()
+	reader := haki.NewReader()
+	reader.Append(haki.Core)
 
-	doEval := func(form string) (interpreter.Expression, error) {
-		tokens, err := interpreter.Tokenize(form)
+	doEval := func(form string) (haki.Expression, error) {
+		tokens, err := haki.Tokenize(form)
 		if err != nil {
 			return NIL, err
 		}
 
-		parser := interpreter.NewParser(tokens)
+		parser := haki.NewParser(tokens)
 		expr, err := parser.Parse()
 
 		if err != nil {
@@ -60,7 +58,7 @@ func evalForm(form string) (interpreter.Expression, error) {
 		if reader.IsBalanced() {
 			form, err := reader.GetNextForm()
 			if err != nil {
-				if err == interpreter.ErrEOF {
+				if err == haki.ErrEOF {
 					break
 				}
 				fmt.Printf(" ERROR: %v\n", err)

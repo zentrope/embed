@@ -14,8 +14,8 @@
 ## You should have received a copy of the GNU General Public License
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-PACKAGE = github.com/zentrope/embed
-BINARY = embed
+PACKAGE = github.com/zentrope/haki
+BINARY = haki
 TREE = tree
 
 .PHONY: godep vendor build clean dist-clean tree test help
@@ -30,7 +30,7 @@ vendor: godep ## Make sure vendor dependencies are present.
 	dep ensure
 
 build: vendor ## Build an executable binary.
-	go build -o $(BINARY)
+	go build -o $(BINARY) $(PACKAGE)/cmd/haki
 
 clean: ## Clean build artifacts (vendor left alone).
 	rm -f $(BINARY)
@@ -42,7 +42,7 @@ tree: ## View source hierarchy without vendor pkgs
 	$(TREE) -C -I "vendor"
 
 test: ## Run tests
-	go test $(PACKAGE)/scraelang/
+	go test $(PACKAGE)/test/ $(ARGS)
 
 testv: ## Run tests in verbose mode
 	go test -v $(PACKAGE)/scraelang/
