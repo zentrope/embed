@@ -27,31 +27,21 @@ type Parser struct {
 	position int
 }
 
-// NewParser returns a new instance of a Parser.
-func NewParser(tokens *Tokens) *Parser {
+// NewParser returns a new parser instance.
+func NewParser() *Parser {
 	return &Parser{
-		tokens:   tokens.Tokens,
+		tokens:   []Token{},
 		position: 0,
 	}
 }
 
-func (p *Parser) pushBack() {
-	if p.position > 0 {
-		p.position = p.position - 1
-	}
+// Reset resets the parser with a new set of tokens.
+func (p *Parser) Reset(tokens *Tokens) {
+	p.tokens = tokens.Tokens
+	p.position = 0
 }
 
-func (p *Parser) next() Token {
-	t := p.tokens[p.position]
-	p.position = p.position + 1
-	return t
-}
-
-func (p *Parser) notDone() bool {
-	return p.position+1 != len(p.tokens)
-}
-
-// Parse2 returns an s-expression suitable for interpretation.
+// Parse returns an s-expression suitable for interpretation.
 func (p *Parser) Parse() (Expression, error) {
 	token := p.next()
 	switch token.kind {
@@ -83,6 +73,22 @@ func (p *Parser) Parse() (Expression, error) {
 	default:
 		return NilExpression, fmt.Errorf("unable to process token '%v'", token)
 	}
+}
+
+func (p *Parser) pushBack() {
+	if p.position > 0 {
+		p.position = p.position - 1
+	}
+}
+
+func (p *Parser) next() Token {
+	t := p.tokens[p.position]
+	p.position = p.position + 1
+	return t
+}
+
+func (p *Parser) notDone() bool {
+	return p.position+1 != len(p.tokens)
 }
 
 func (p *Parser) parseList() (Expression, error) {

@@ -21,13 +21,20 @@ import "fmt"
 // Interpreter is something that evaluates
 type Interpreter interface {
 	Evaluate(env *Environment, expr Expression) (Expression, error)
+	Execute(form string) (Expression, error)
 }
 
 // TcoInterpreter attempts to implement some TCO
-type TcoInterpreter struct{}
+type TcoInterpreter struct {
+	parser      *Parser
+	environment *Environment
+}
 
 // NaiveInterpreter is fully recursive
-type NaiveInterpreter struct{}
+type NaiveInterpreter struct {
+	parser      *Parser
+	environment *Environment
+}
 
 // Type represents a type of evaluator
 type Type int
@@ -42,10 +49,51 @@ const (
 func NewInterpreter(kind Type) Interpreter {
 	switch kind {
 	case TCO:
-		return TcoInterpreter{}
+		return TcoInterpreter{
+			environment: NewEnvironment(),
+			parser:      NewParser(),
+		}
 	default:
-		return NaiveInterpreter{}
+		return NaiveInterpreter{
+			environment: NewEnvironment(),
+			parser:      NewParser(),
+		}
 	}
+}
+
+// Execute a Haki expression.
+func (tco TcoInterpreter) Execute(form string) (Expression, error) {
+
+	tokens, err := Tokenize(form)
+	if err != nil {
+		return NilExpression, err
+	}
+
+	tco.parser.Reset(tokens)
+
+	expr, err := tco.parser.Parse()
+	if err != nil {
+		return NilExpression, err
+	}
+
+	return tco.Evaluate(tco.environment, expr)
+}
+
+// Execute a Haki expression.
+func (naive NaiveInterpreter) Execute(form string) (Expression, error) {
+
+	tokens, err := Tokenize(form)
+	if err != nil {
+		return NilExpression, err
+	}
+
+	naive.parser.Reset(tokens)
+
+	expr, err := naive.parser.Parse()
+	if err != nil {
+		return NilExpression, err
+	}
+	return naive.Evaluate(naive.environment, expr)
 }
 
 func nilExpr(reason string, params ...interface{}) (Expression, error) {

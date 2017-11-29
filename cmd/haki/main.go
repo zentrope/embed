@@ -25,28 +25,12 @@ import (
 	haki "github.com/zentrope/haki/lang"
 )
 
-func eval(interpreter haki.Interpreter, env *haki.Environment, form string) haki.Expression {
-	tokens, err := haki.Tokenize(form)
-	if err != nil {
-		fmt.Printf(" ~ %v\n", err)
-		return haki.NilExpression
-	}
-
-	p := haki.NewParser(tokens)
-	expr, err := p.Parse()
-
+func eval(interpreter haki.Interpreter, form string) haki.Expression {
+	result, err := interpreter.Execute(form)
 	if err != nil {
 		fmt.Printf("ERROR: %v\n", err)
 		return haki.NilExpression
 	}
-
-	result, err := interpreter.Evaluate(env, expr)
-
-	if err != nil {
-		fmt.Printf("ERROR: %v\n", err)
-		return haki.NilExpression
-	}
-
 	return result
 }
 
@@ -59,10 +43,7 @@ func flatten(s string) string {
 	return strings.TrimSpace(flatre.ReplaceAllString(s, " "))
 }
 
-func readAll(
-	interpreter haki.Interpreter,
-	env *haki.Environment,
-	reader *haki.Reader, coreload bool) {
+func readAll(interpreter haki.Interpreter, reader *haki.Reader, coreload bool) {
 	for {
 		if reader.IsBalanced() {
 			form, err := reader.GetNextForm()
@@ -77,10 +58,10 @@ func readAll(
 			}
 
 			if coreload {
-				fmt.Printf("LOADING: %v\n", flatten(form))
-				eval(interpreter, env, form)
+				fmt.Print(".")
+				eval(interpreter, form)
 			} else {
-				fmt.Printf("%v\n", eval(interpreter, env, form))
+				fmt.Printf("%v\n", eval(interpreter, form))
 			}
 			continue
 		}
@@ -88,7 +69,7 @@ func readAll(
 }
 
 func main() {
-	fmt.Println("Embed Project Repl")
+	fmt.Println("Haki Repl")
 
 	rl, err := readline.New(promptRepl)
 	if err != nil {
@@ -97,18 +78,19 @@ func main() {
 
 	defer rl.Close()
 
-	// lang := haki.NewInterpreter(haki.Naive)
+	// interpreter := haki.NewInterpreter(haki.Naive)
 	// fmt.Println("Naive interpreter")
-	lang := haki.NewInterpreter(haki.TCO)
-	fmt.Println("TCO interpreter")
+	interpreter := haki.NewInterpreter(haki.TCO)
+	fmt.Println("* using tco interpreter")
 
-	environment := haki.NewEnvironment()
 	reader := haki.NewReader()
 
 	// load core
 
+	fmt.Print("* loading core")
 	reader.Append(haki.Core)
-	readAll(lang, environment, reader, true)
+	readAll(interpreter, reader, true)
+	fmt.Println("done.")
 
 	// repl
 
@@ -123,7 +105,7 @@ func main() {
 
 		if reader.IsBalanced() {
 			rl.SetPrompt(promptRepl)
-			readAll(lang, environment, reader, false)
+			readAll(interpreter, reader, false)
 
 		} else {
 			reader.Append("\n")
