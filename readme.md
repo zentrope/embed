@@ -1,25 +1,39 @@
-# embed
+# haki
 
-A small interpreter to explore the idea of using a small language to create little grammars or parsers or evaluators or rules you can add to a Golang program as data. Something you could use if a single regular expression doesn't really work all that well for you.
+Now is the time for all good men to come to the aid of their
+country. Now is the time for all good to com
 
-I'm thinking this is a kind of string processing kind of DSL. You can pass in a giant text file, and a bit of script and it can return parts of the file as a result, or build an aggregate out of it.
+A small embeddable (in Golang programs) interpreter to explore the
+idea of using a small language to create little grammars or parsers or
+evaluators or rules you can add to a Golang program as data. Something
+you could use if a single regular expression doesn't really work all
+that well for you.
+
+I'm thinking this is a kind of string processing kind of DSL. You can
+pass in a giant text file, and a bit of script and it can return parts
+of the file as a result, or build an aggregate out of it.
 
 ## todo
 
-This experiment is designed to be something you'd use to transform data according to rules that are best expressed as regular code so I'm not going to worry too much about file IO or socket connections. You pass in a string, you get another string (or a collection of strings) back.
+This experiment is designed to be something you'd use to transform
+data according to rules that are best expressed as regular code so I'm
+not going to worry too much about file IO or socket connections. You
+pass in a string, you get another string (or a collection of strings)
+back.
 
 ### interpreter
 
-* [ ] **let** should allow recursive bindings
 * [ ] **cond** special form
-* [ ] mutation (Clojure's swap!/reset!)
+* [ ] mutation (Clojure's **swap!/reset!**)
 * [ ] **&rest** parameters
 * [ ] comments
-* [ ] embed API for Golang programs
-* [ ] tests
+* [ ] simpler API (hide environment, tokenizer, parser steps)
 * [ ] load-code and load-data (handy for interactive dev/testing)
-* [ ] consider a [cps](https://stackoverflow.com/a/5986168) interpreter (try/catch?)
+* [ ] consider a [cps][cps] interpreter (try/catch?)
 * [ ] support for laziness for processing large files?
+* [ ] a mode to trace recursion depth
+* [x] ~~**let** should allow recursive bindings~~ (TCO interpreter)
+* [x] ~~test starter (enough to start using it for new dev and changes)~~
 * [x] ~~repl~~
 * [x] ~~top level definitions~~
 * [x] ~~top level functions~~
@@ -30,16 +44,21 @@ This experiment is designed to be something you'd use to transform data accordin
 * [x] ~~implement prelude: map, reduce, range, filter~~
 * [x] ~~try a tail-call optimized interpreter?~~
 
+[cps]: https://stackoverflow.com/a/5986168
+
+
 ### builtins
 
-* [ ] map data structure and associated functions
+* [ ] hashmap data structure and associated functions
 * [ ] consider map, reduce, filter as builtins
 * [ ] apply -- builtin function
 * [ ] builtin: regex matching
 * [ ] builtin: regex group stuff
 * [ ] builtins: string functions
 * [ ] figure out a better way to do math logic builtins
-* [ ] ~~count~~
+* [ ] mutability
+* [ ] list comprehensions?
+* [x] ~~count~~
 * [x] ~~list -- builtin list function~~
 * [x] ~~prepend -- builtin list function~~
 * [x] ~~append -- builtin list function~~
@@ -53,6 +72,14 @@ This experiment is designed to be something you'd use to transform data accordin
 * [x] ~~Pressing "return" in repl should not generate EOF error~~
 * [x] ~~`(map (fn (x) (+ 2 x)) (list 1 2 3))` tries to eval '1~~
 * [x] ~~`(map (fn (x) (+ 2 x)) '(1 2 3))` tries to eval '1~~
+
+### non-goals
+
+Probably won't do these:
+
+* macros
+* threading (this is meant to be embedded)
+
 
 ## looks
 
