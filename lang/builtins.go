@@ -340,7 +340,11 @@ func _minus(args []Expression) (Expression, error) {
 func _prn(args []Expression) (Expression, error) {
 	values := make([]string, 0)
 	for _, a := range args {
-		values = append(values, fmt.Sprintf("%v", a))
+		value := a.String()
+		if a.tag == ExpString {
+			value = a.string
+		}
+		values = append(values, value)
 	}
 	fmt.Println(strings.Join(values, " "))
 	return NilExpression, nil
