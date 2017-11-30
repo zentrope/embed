@@ -22,6 +22,7 @@ import "fmt"
 type Interpreter interface {
 	Evaluate(env *Environment, expr Expression) (Expression, error)
 	Execute(form string) (Expression, error)
+	Run(reader *Reader) (Expression, error)
 }
 
 // TcoInterpreter attempts to implement some TCO
@@ -94,6 +95,32 @@ func (naive NaiveInterpreter) Execute(form string) (Expression, error) {
 		return NilExpression, err
 	}
 	return naive.Evaluate(naive.environment, expr)
+}
+
+// Run executes all the forms in a reader (a script)
+func (tco TcoInterpreter) Run(reader *Reader) (Expression, error) {
+	return runner(tco, reader)
+}
+
+// Run executes all the forms in a reader (a script)
+func (naive NaiveInterpreter) Run(reader *Reader) (Expression, error) {
+	return runner(naive, reader)
+}
+
+func runner(interpreter Interpreter, reader *Reader) (Expression, error) {
+	forms, err := reader.GetForms()
+	if err != nil {
+		return NilExpression, err
+	}
+
+	var result Expression
+	for _, form := range forms {
+		result, err = interpreter.Execute(form)
+		if err != nil {
+			return NilExpression, err
+		}
+	}
+	return result, nil
 }
 
 func nilExpr(reason string, params ...interface{}) (Expression, error) {

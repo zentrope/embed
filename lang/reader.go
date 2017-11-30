@@ -27,10 +27,16 @@ type Reader struct {
 }
 
 // NewReader returns a new instances of a reader
-func NewReader() *Reader {
-	return &Reader{
+func NewReader(forms ...string) *Reader {
+	r := &Reader{
 		buffer: make([]rune, 0),
 	}
+
+	for _, f := range forms {
+		r.Append(f)
+	}
+
+	return r
 }
 
 func (reader *Reader) String() string {
@@ -60,6 +66,27 @@ func (reader *Reader) Append(line string) {
 
 // ErrEOF means there's nothing left to read
 var ErrEOF = errors.New("EOF")
+
+// GetForms returns all the available forms in the reader buffer.
+func (reader *Reader) GetForms() ([]string, error) {
+	forms := make([]string, 0)
+
+	for {
+		form, err := reader.GetNextForm()
+		if err == ErrEOF {
+			return forms, nil
+		} else if err != nil {
+			return []string{}, err
+		}
+
+		if form == "" {
+			break
+		}
+
+		forms = append(forms, form)
+	}
+	return forms, nil
+}
 
 // GetNextForm returns the next available expression from the buffer.
 func (reader *Reader) GetNextForm() (string, error) {

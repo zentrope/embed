@@ -17,7 +17,9 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"regexp"
 	"strings"
 
@@ -68,8 +70,12 @@ func readAll(interpreter haki.Interpreter, reader *haki.Reader, coreload bool) {
 	}
 }
 
-func main() {
-	fmt.Println("Haki Repl")
+func printf(pattern string, args ...interface{}) {
+	fmt.Printf(pattern+"\n", args...)
+}
+
+func repl() {
+	printf("Haki Repl")
 
 	rl, err := readline.New(promptRepl)
 	if err != nil {
@@ -81,7 +87,7 @@ func main() {
 	// interpreter := haki.NewInterpreter(haki.Naive)
 	// fmt.Println("Naive interpreter")
 	interpreter := haki.NewInterpreter(haki.TCO)
-	fmt.Println("* using tco interpreter")
+	printf("* using tco interpreter")
 
 	reader := haki.NewReader()
 
@@ -90,7 +96,9 @@ func main() {
 	fmt.Print("* loading core")
 	reader.Append(haki.Core)
 	readAll(interpreter, reader, true)
-	fmt.Println("done.")
+	printf("done.")
+
+	printf("* type :quit to exit")
 
 	// repl
 
@@ -98,7 +106,13 @@ func main() {
 
 		line, err := rl.Readline()
 		if err != nil {
-			break
+			printf("bye: %v", err)
+			os.Exit(0)
+		}
+
+		if line == ":quit" {
+			printf("bye")
+			os.Exit(0)
 		}
 
 		reader.Append(line)
@@ -112,4 +126,64 @@ func main() {
 			rl.SetPrompt(promptMore)
 		}
 	}
+}
+
+func main() {
+	argv := os.Args
+	argc := len(argv)
+
+	if argc < 2 {
+		repl()
+		printf("WARN: repl terminated by returning ... odd.")
+		os.Exit(1)
+	}
+
+	loadScript := func(filename string) (string, error) {
+		// Read the contents of the file
+		file, err := os.Open(argv[1])
+		if err != nil {
+			return "", err
+		}
+
+		defer file.Close()
+
+		var text []string
+
+		reader := bufio.NewReader(file)
+		var line string
+
+		for {
+			line, err = reader.ReadString('\n')
+			if !strings.HasPrefix(line, "#!/") {
+				text = append(text, line)
+			}
+
+			if err != nil {
+				break
+			}
+		}
+
+		return strings.TrimSpace(strings.Join(text, "")), nil
+	}
+
+	script, err := loadScript(argv[1])
+	if err != nil {
+		printf("ERROR: %v", err)
+		os.Exit(1)
+	}
+
+	interpreter := haki.NewInterpreter(haki.TCO)
+	reader := haki.NewReader(haki.Core, script)
+	// reader.Append(haki.Core)
+	// reader.Append(script)
+
+	_, err = interpreter.Run(reader)
+	if err != nil {
+		printf("ERROR: %v", err)
+		os.Exit(1)
+	}
+
+	// printf("%v", e)
+	os.Exit(0)
+
 }
