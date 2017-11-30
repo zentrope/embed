@@ -166,24 +166,24 @@ func main() {
 		return strings.TrimSpace(strings.Join(text, "")), nil
 	}
 
+	runScript := func(script string) error {
+		interpreter := haki.NewInterpreter(haki.TCO)
+		reader := haki.NewReader(haki.Core, script)
+
+		_, err := interpreter.Run(reader)
+		return err
+	}
+
 	script, err := loadScript(argv[1])
 	if err != nil {
 		printf("ERROR: %v", err)
 		os.Exit(1)
 	}
 
-	interpreter := haki.NewInterpreter(haki.TCO)
-	reader := haki.NewReader(haki.Core, script)
-	// reader.Append(haki.Core)
-	// reader.Append(script)
-
-	_, err = interpreter.Run(reader)
-	if err != nil {
+	if err := runScript(script); err != nil {
 		printf("ERROR: %v", err)
 		os.Exit(1)
 	}
 
-	// printf("%v", e)
 	os.Exit(0)
-
 }

@@ -13,6 +13,10 @@ I'm thinking this is a kind of string processing kind of DSL. You can
 pass in a giant text file, and a bit of script and it can return parts
 of the file as a result, or build an aggregate out of it.
 
+## install
+
+    $ go get -u github.com/zentrope/haki/cmd/haki
+
 ## todo
 
 This experiment is designed to be something you'd use to transform
@@ -45,7 +49,6 @@ back.
 * [x] ~~try a tail-call optimized interpreter?~~
 
 [cps]: https://stackoverflow.com/a/5986168
-
 
 ### builtins
 
