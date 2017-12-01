@@ -33,6 +33,7 @@ var builtins = map[string]primitiveFunc{
 	"=":         _equals,
 	"append":    _append,
 	"count":     _count,
+	"format":    _format,
 	"head":      _head,
 	"join":      _join,
 	"list":      _list,
@@ -94,6 +95,26 @@ func toExpr(x float64) Expression {
 		return NewExpr(ExpInteger, int64(x))
 	}
 	return NewExpr(ExpFloat, x)
+}
+
+func _format(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc < 1 {
+		return nilExpr("(format pattern ...args) requires at least the first argument.")
+	}
+
+	if args[0].tag != ExpString {
+		return nilExpr("(format pattern ...args) the pattern argument must be a string.")
+	}
+
+	pattern := args[0].string
+	params := make([]interface{}, 0)
+	for _, a := range args[1:] {
+		params = append(params, a.Value())
+	}
+
+	result := fmt.Sprintf(pattern, params...)
+	return NewExpr(ExpString, result), nil
 }
 
 func _readFile(args []Expression) (Expression, error) {

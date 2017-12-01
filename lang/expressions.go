@@ -376,6 +376,40 @@ func (e Expression) IntValue() int64 {
 
 // Testing help
 
+// Value returns the raw golang value of the expression
+func (e Expression) Value() interface{} {
+	switch e.tag {
+	case ExpPrimitive:
+		return fmt.Sprintf("builtin::%v", e.primitive)
+	case ExpList:
+		elems := make([]interface{}, 0)
+		for _, e := range e.list {
+			elems = append(elems, e.Value())
+		}
+		return elems
+	case ExpString:
+		return e.string
+	case ExpInteger:
+		return e.integer
+	case ExpFloat:
+		return e.float
+	case ExpSymbol:
+		return e.symbol
+	case ExpBool:
+		return e.bool
+	case ExpQuote:
+		return e.quote.String()
+	case ExpNil:
+		return nil
+	case ExpLambda:
+		return fmt.Sprintf("lambda<%v|%v %v>", e.functionName, e.functionParams, e.functionBody)
+	case ExpFunction:
+		return fmt.Sprintf("fn<%v %v>", e.functionName, e.functionParams)
+	default:
+		return fmt.Sprintf("unknown→%#v", e)
+	}
+}
+
 // IsEqual to expression
 func (e Expression) IsEqual(value interface{}) bool {
 	switch v := value.(type) {
