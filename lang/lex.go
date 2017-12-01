@@ -131,6 +131,11 @@ func Tokenize(form string) (*Tokens, error) {
 				results.pushWord()
 			}
 
+		case ',': // Treat commas as whitespace.
+			if results.inString() {
+				results.pushChar(c)
+			}
+
 		case ' ', '\t', '\r', '\n':
 			if results.inString() {
 				results.pushChar(c)
