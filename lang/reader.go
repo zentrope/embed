@@ -19,6 +19,7 @@ package lang
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // Reader is a container for dolling out expressions.
@@ -119,5 +120,5 @@ func (reader *Reader) GetNextForm() (string, error) {
 	if opens != closes {
 		return string(form), errors.New("incomplete form (missing parens)")
 	}
-	return string(form), nil
+	return strings.TrimSpace(string(form)), nil
 }
