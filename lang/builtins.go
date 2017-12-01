@@ -97,7 +97,7 @@ func toExpr(x float64) Expression {
 func _reFind(args []Expression) (Expression, error) {
 	argc := len(args)
 	if argc < 2 {
-		return nilExpr("(re-match re string) requires 2 args, you provided %v", argc)
+		return nilExpr("(re-find re string) requires 2 args, you provided %v", argc)
 	}
 
 	if err := verifyStrings(args); err != nil {

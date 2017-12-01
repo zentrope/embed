@@ -55,7 +55,7 @@ back.
 * [ ] hashmap data structure and associated functions
 * [ ] consider map, reduce, filter as builtins
 * [ ] apply -- builtin function
-* [ ] builtin: regex matching
+* [x] ~~builtin: regex matching~~
 * [ ] builtin: regex group stuff
 * [ ] builtins: string functions
 * [ ] figure out a better way to do math logic builtins
