@@ -18,6 +18,7 @@ package test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"testing"
 
 	haki "github.com/zentrope/haki/lang"
@@ -54,17 +55,45 @@ type form struct {
 	form     string
 }
 
+func TestReadFile(t *testing.T) {
+
+	text := "test text"
+
+	file, err := ioutil.TempFile("/tmp", "haki")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if err := ioutil.WriteFile(file.Name(), []byte(text), 0644); err != nil {
+		t.Error(err)
+	}
+
+	expr := fmt.Sprintf("(read-file \"%v\")", file.Name())
+	result, err := evalForm(expr)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if !result.IsEqual(text) {
+		t.Errorf("Expected '%v', got '%v'.", text, result)
+	}
+}
+
 func TestRegexBuiltins(t *testing.T) {
 	table := []form{
+		// re-list
 		{"list", []string{"a", "b", "c"}, `(re-list "\S+" "a b c")`},
-		{"list", []string{"a", "b", "c"}, `(re-split "\s+" "a b c")`},
 		{"list", []string{"192", "168", "1", "1"}, `(re-list "\d+" "192.168.1.1")`},
+		// re-split
+		{"list", []string{"a", "b", "c"}, `(re-split "\s+" "a b c")`},
 		{"list", []string{"192", "168", "1", "1"}, `(re-split "[.]" "192.168.1.1")`},
+		{"list", []string{"first", "second", "third"}, `(re-split "\\n" "first\nsecond\nthird")`},
+		// re-match
 		{"bool", true, `(re-match "[<]now[>]" "Now <now> no.")`},
 		{"bool", false, `(re-match "[<]now[>]" "Now now no.")`},
+		// re-find
 		{"string", "<p>", `(re-find "[<]\S+[>]" "<p>Some text.</p>")`},
 		{"string", "</p>", `(re-find "[<][/]\S+[>]" "<p>Some text.</p>")`},
-		{"list", []string{"first", "second", "third"}, `(re-split "\\n" "first\nsecond\nthird")`},
 	}
 
 	for _, row := range table {

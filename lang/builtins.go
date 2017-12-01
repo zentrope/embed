@@ -19,31 +19,33 @@ package lang
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"regexp"
 	"strings"
 )
 
 var builtins = map[string]primitiveFunc{
-	"*":        _mult,
-	"+":        _add,
-	"-":        _minus,
-	"<":        _lessThan,
-	"=":        _equals,
-	"append":   _append,
-	"count":    _count,
-	"head":     _head,
-	"join":     _join,
-	"list":     _list,
-	"mod":      _mod,
-	"not":      _not,
-	"prepend":  _prepend,
-	"prn":      _prn,
-	"re-find":  _reFind,
-	"re-list":  _reList,
-	"re-match": _reMatch,
-	"re-split": _reSplit,
-	"tail":     _tail,
+	"*":         _mult,
+	"+":         _add,
+	"-":         _minus,
+	"<":         _lessThan,
+	"=":         _equals,
+	"append":    _append,
+	"count":     _count,
+	"head":      _head,
+	"join":      _join,
+	"list":      _list,
+	"read-file": _readFile,
+	"mod":       _mod,
+	"not":       _not,
+	"prepend":   _prepend,
+	"prn":       _prn,
+	"re-find":   _reFind,
+	"re-list":   _reList,
+	"re-match":  _reMatch,
+	"re-split":  _reSplit,
+	"tail":      _tail,
 }
 
 type primitiveFunc func(args []Expression) (Expression, error)
@@ -92,6 +94,25 @@ func toExpr(x float64) Expression {
 		return NewExpr(ExpInteger, int64(x))
 	}
 	return NewExpr(ExpFloat, x)
+}
+
+func _readFile(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc < 1 {
+		return nilExpr("(read-file file-name) requires 1 arg, you provided %v", argc)
+	}
+
+	if err := verifyStrings(args); err != nil {
+		return NilExpression, err
+	}
+
+	buffer, err := ioutil.ReadFile(args[0].string)
+	if err != nil {
+		return NilExpression, err
+	}
+
+	str := string(buffer)
+	return NewExpr(ExpString, str), nil
 }
 
 func _reFind(args []Expression) (Expression, error) {
