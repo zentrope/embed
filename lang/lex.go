@@ -78,7 +78,9 @@ func (ts *Tokens) pushWord() {
 	if len(ts.word) > 0 {
 		w := string(ts.word)
 		k := ts.kind
-		if isInteger(w) {
+		if k == AString {
+			// Don't convert if actual string.
+		} else if isInteger(w) {
 			k = AInteger
 		} else if isFloat(w) {
 			k = AFloat
