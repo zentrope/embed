@@ -54,6 +54,37 @@ type form struct {
 	form     string
 }
 
+func TestRegexBuiltins(t *testing.T) {
+	table := []form{
+		{"list", []string{"a", "b", "c"}, `(re-list "\S+" "a b c")`},
+		{"list", []string{"a", "b", "c"}, `(re-split "\s+" "a b c")`},
+		{"list", []string{"192", "168", "1", "1"}, `(re-list "\d+" "192.168.1.1")`},
+		{"list", []string{"192", "168", "1", "1"}, `(re-split "[.]" "192.168.1.1")`},
+		{"bool", true, `(re-match "[<]now[>]" "Now <now> no.")`},
+		{"bool", false, `(re-match "[<]now[>]" "Now now no.")`},
+		{"string", "<p>", `(re-find "[<]\S+[>]" "<p>Some text.</p>")`},
+		{"string", "</p>", `(re-find "[<][/]\S+[>]" "<p>Some text.</p>")`},
+		{"list", []string{"first", "second", "third"}, `(re-split "\\n" "first\nsecond\nthird")`},
+	}
+
+	for _, row := range table {
+		t.Logf("regex: %v", row.form)
+		rc, err := evalForm(row.form)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if !(rc.Type() == row.tag) {
+			t.Errorf("Expected '%v' result: %v → %v → %v", row.tag, row.expected, row.form, rc)
+		}
+
+		if !rc.IsEqual(row.expected) {
+			t.Errorf("Expected '%v' result: %v → %v → %v (%v)",
+				row.tag, row.form, row.expected, rc, rc.Type())
+		}
+	}
+}
+
 func TestSimpleMath(t *testing.T) {
 
 	table := []form{

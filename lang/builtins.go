@@ -20,25 +20,30 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"regexp"
 	"strings"
 )
 
 var builtins = map[string]primitiveFunc{
-	"*":       _mult,
-	"+":       _add,
-	"-":       _minus,
-	"<":       _lessThan,
-	"=":       _equals,
-	"append":  _append,
-	"count":   _count,
-	"head":    _head,
-	"join":    _join,
-	"list":    _list,
-	"mod":     _mod,
-	"not":     _not,
-	"prepend": _prepend,
-	"prn":     _prn,
-	"tail":    _tail,
+	"*":        _mult,
+	"+":        _add,
+	"-":        _minus,
+	"<":        _lessThan,
+	"=":        _equals,
+	"append":   _append,
+	"count":    _count,
+	"head":     _head,
+	"join":     _join,
+	"list":     _list,
+	"mod":      _mod,
+	"not":      _not,
+	"prepend":  _prepend,
+	"prn":      _prn,
+	"re-find":  _reFind,
+	"re-list":  _reList,
+	"re-match": _reMatch,
+	"re-split": _reSplit,
+	"tail":     _tail,
 }
 
 type primitiveFunc func(args []Expression) (Expression, error)
@@ -54,6 +59,18 @@ func verifyNums(args []Expression) error {
 			continue
 		default:
 			return errors.New("all arguments must be numbers")
+		}
+	}
+	return nil
+}
+
+func verifyStrings(args []Expression) error {
+	for _, arg := range args {
+		switch arg.tag {
+		case ExpString:
+			continue
+		default:
+			return errors.New("all arguments must be strings")
 		}
 	}
 	return nil
@@ -75,6 +92,94 @@ func toExpr(x float64) Expression {
 		return NewExpr(ExpInteger, int64(x))
 	}
 	return NewExpr(ExpFloat, x)
+}
+
+func _reFind(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc < 2 {
+		return nilExpr("(re-match re string) requires 2 args, you provided %v", argc)
+	}
+
+	if err := verifyStrings(args); err != nil {
+		return NilExpression, err
+	}
+
+	re, err := regexp.Compile(args[0].string)
+	if err != nil {
+		return NilExpression, err
+	}
+
+	return NewExpr(ExpString, re.FindString(args[1].string)), nil
+}
+
+func _reMatch(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc < 2 {
+		return nilExpr("(re-match re string) requires 2 args, you provided %v", argc)
+	}
+
+	if err := verifyStrings(args); err != nil {
+		return NilExpression, err
+	}
+
+	re, err := regexp.Compile(args[0].string)
+	if err != nil {
+		return NilExpression, err
+	}
+
+	return NewExpr(ExpBool, re.MatchString(args[1].string)), nil
+}
+
+func _reSplit(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc < 2 {
+		return nilExpr("(re-split re string) requires 2 args, you provided %v", argc)
+	}
+
+	if err := verifyStrings(args); err != nil {
+		return NilExpression, err
+	}
+
+	re, err := regexp.Compile(args[0].string)
+	if err != nil {
+		return NilExpression, err
+	}
+
+	words := re.Split(args[1].string, -1)
+
+	es := make([]Expression, 0)
+
+	for _, word := range words {
+		es = append(es, NewExpr(ExpString, word))
+	}
+
+	return NewExpr(ExpList, es), nil
+}
+
+func _reList(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc < 2 {
+		return nilExpr("(re-list re string) requires 2 args, you provided %v", argc)
+	}
+
+	if err := verifyStrings(args); err != nil {
+		return NilExpression, err
+	}
+
+	re, err := regexp.Compile(args[0].string)
+	if err != nil {
+		return NilExpression, err
+	}
+
+	words := re.FindAllString(args[1].string, -1)
+
+	es := make([]Expression, 0)
+
+	for _, word := range words {
+		es = append(es, NewExpr(ExpString, word))
+	}
+
+	return NewExpr(ExpList, es), nil
 }
 
 func _count(args []Expression) (Expression, error) {

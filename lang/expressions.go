@@ -379,6 +379,8 @@ func (e Expression) IntValue() int64 {
 // IsEqual to expression
 func (e Expression) IsEqual(value interface{}) bool {
 	switch v := value.(type) {
+	case bool:
+		return v == e.bool
 	case int:
 		return int(e.integer) == v
 	case int64:
@@ -387,6 +389,12 @@ func (e Expression) IsEqual(value interface{}) bool {
 		return e.float == v
 	case string:
 		return e.string == v || e.symbol == v
+	case []string:
+		exprs := make([]Expression, 0)
+		for _, s := range v {
+			exprs = append(exprs, NewExpr(ExpString, s))
+		}
+		return e.Equals(NewExpr(ExpList, exprs))
 	case []int64:
 		// TODO more efficent to convert e to ints, than this
 		exprs := make([]Expression, 0)
