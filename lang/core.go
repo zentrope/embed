@@ -82,7 +82,24 @@ const Core = `
 	(= (mod x 2) 0))
 
 (defun odd? (x)
-	(not (even? x)))`
+	(not (even? x)))
+
+(defun loop (f lst)
+	(let (_loop (fn (f lst)
+									 (if (= lst '())
+										 '()
+										 (do (f (head lst))
+												 (_loop f (tail lst))))))
+		(_loop f lst)))
+
+(defun loop-index (f lst)
+	(let (_loop (fn (index f lst)
+									 (if (= lst '())
+										 '()
+										 (do (f index (head lst))
+												 (_loop (inc index) f (tail lst))))))
+		(_loop 0 f lst)))
+`
 
 // This won't work until "let" allows for recursive definitions.
 const deck = `

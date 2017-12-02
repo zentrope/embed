@@ -92,8 +92,17 @@ a new `initial-value` per `list` item.
 > Returns the number of items in the `list`.
 
 (**join** list<sub>1</sub> list<sub>2</sub> ... list<sub>n</sub>) → list
+
 > Returns the concatenation of each parameter into a single list.
 
+(__loop__ fn list) → nil
+
+> Applies `fn` to each val in `list` for side-effects.
+
+(__loop-index__ fn list) → nil
+
+> Applies `fn` to an incrementing index and each `val` in `list` (example: `(fn (idx
+> val) (prn idx val))`) for side-effects.
 
 ## Print functions
 
