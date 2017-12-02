@@ -2,6 +2,8 @@
 
 A rough guide to the functions you can use in the Haki scripting language.
 
+
+
 ## Math functions
 
 (**+** num<sub>1</sub> num<sub>2</sub> ... num<sub>n</sub>) → num
@@ -29,33 +31,44 @@ A rough guide to the functions you can use in the Haki scripting language.
 (**odd?** num) → bool
 > Returns true if `num` is an odd number.
 
+
+(**<** num<sub>1</sub> num<sub>2</sub> ... num<sub>n</sub>) → bool
+> Returns true if each `num` is less than the number to its right.
+
+
+
 ## Logic functions
 
 (**not** val) → bool
 > Returns false if the `val` is truthy (not false or nil), otherwise true.
+
+(__=__ val<sub>1</sub> val<sub>2</sub>) → bool
+> Returns true if the `val` of each of the params is equivalent
+(regardless of whether or not they're the same object in memory).
+
 
 
 ## List functions
 
 (**list** val<sub>1</sub> val<sub>2</sub> ... val<sub>n</sub>) → list
 
-> Return a list constituting all the parameter values. The values can
+> Return a list constituting all the parameter `vals`. The `vals` can
 > be any type, including lists.
 
 (**list?** val) → bool
-> Return true of the value is a list.
+> Return true of the `val` is a list.
 
-(**head** list) → value
+(**head** list) → val
 > Return the first value in the list.
 
-(**tail** list) → value
+(**tail** list) → val
 > Return the remainder of the list, ignore the first value.
 
-(**append** list value) → list
-> Add the value to the end of the list, returning a new list.
+(**append** list val) → list
+> Add the `val` to the end of the list, returning a new list.
 
-(**prepend** value list) → list
-> Add the value to the beginning of the list, returning a new list.
+(**prepend** val list) → list
+> Add the `val` to the beginning of the list, returning a new list.
 
 (**map** function list) → list
 > Returns a list made up of `function` applied to each value in `list`.
@@ -75,29 +88,78 @@ a new `initial-value` per `list` item.
 (**take** num list) → list
 > Returns a new list consisting of the first `num` values in `list`.
 
+(**count** list) → num
+> Returns the number of items in the `list`.
+
+(**join** list<sub>1</sub> list<sub>2</sub> ... list<sub>n</sub>) → list
+> Returns the concatenation of each parameter into a single list.
+
+
+## Print functions
+
+(__prn__ val<sub>1</sub> val<sub>2</sub> ... val<sub>n</sub>) → nil
+> Prints the values to standard out, appending a newline.
+
+
+## String functions
+
+(__format__ pattern val<sub>1</sub> val<sub>2</sub>... val<sub>n</sub>) → string
+
+> Formats a string based on pattern and the value parameters (a.k.a,
+__sprintf__) according to the [Golang implementation][printf].
+
+(__re-find__ regex string) → string
+
+> Returns the first match for `regex` in `string`.
+
+(__re-list__ regex string) → list
+
+> Returns a list of all `regex` matches in `string`.
+
+(__re-match__ regex string) → bool
+
+> Returns true if the `regex` finds a match in `string`.
+
+(__re-split__ regex string) → list
+
+> Returns a list of strings split based on the `regex` applied to `string`.
+
+
+[printf]: https://golang.org/pkg/fmt/
+
+
+
 ## File functions
 
-(**read-file** file-name) → string
+(__read-file__ file-name) → string
+
 > Return the contents of the named file as a string.
 
-(**open** file-name) → file-handle <span style="color:red">_;; not implemented_</span>
+(__open__ file-name) → file-handle <span style="color:red">_;; not implemented_</span>
+
 > Open a file for reading or writing.
 
-(**close** file-handle) → nil <span style="color:red">_;; not implemented_</span>
+(__close__ file-handle) → nil <span style="color:red">_;; not implemented_</span>
+
 > Close an open file handle.
 
-(**exists?** file-name-or-handle) → bool <span style="color:red">_;; not implemented_</span>
+(__exists?__ file-name-or-handle) → bool <span style="color:red">_;; not implemented_</span>
+
 > Returns true if the file or directory exists.
 
-(**file?** file-name-or-handle) => bool <span style="color:red">_;; not implemented_</span>
+(__file?__ file-name-or-handle) => bool <span style="color:red">_;; not implemented_</span>
+
 > Returns true of the file is a file.
 
-(**directory?** file-name-or-handle) → bool <span style="color:red">_;; not implemented_</span>
+(__directory?__ file-name-or-handle) → bool <span style="color:red">_;; not implemented_</span>
+
 > Returns true if the file is a directory.
 
-(**directories** file-name-or-handle) → list <span style="color:red">_;; not implemented_</span>
+(__directories__ file-name-or-handle) → list <span style="color:red">_;; not implemented_</span>
+
 > Return a list of all the files and directories (recursive) starting
 at file-name-or-handle as the root.
 
-(**read-line** file-handle) → string | nil <span style="color:red">_;; not implemented_</span>
-> Read a line from a file. A `nil` signifies an end-of-file condition.
+(__read-line__ file-handle) → string | nil <span style="color:red">_;; not implemented_</span>
+
+> Read a line from a `file-handle`. A `nil` signifies an end-of-file condition.
