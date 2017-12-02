@@ -3,7 +3,6 @@
 A rough guide to the functions you can use in the Haki scripting language.
 
 
-
 ## Math functions
 
 (**+** num<sub>1</sub> num<sub>2</sub> ... num<sub>n</sub>) → num
@@ -152,15 +151,15 @@ __sprintf__) according to the [Golang implementation][printf].
 
 > Close an open file handle.
 
-(__exists?__ file-name-or-handle) → bool <span style="color:red">_;; not implemented_</span>
+(__exists?__ file-name-or-handle) → bool
 
 > Returns true if the file or directory exists.
 
-(__file?__ file-name-or-handle) => bool <span style="color:red">_;; not implemented_</span>
+(__file?__ file-name-or-handle) => bool
 
 > Returns true of the file is a file.
 
-(__directory?__ file-name-or-handle) → bool <span style="color:red">_;; not implemented_</span>
+(__directory?__ file-name-or-handle) → bool
 
 > Returns true if the file is a directory.
 

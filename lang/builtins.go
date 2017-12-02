@@ -21,33 +21,37 @@ import (
 	"fmt"
 	"io/ioutil"
 	"math"
+	"os"
 	"regexp"
 	"strings"
 )
 
 var builtins = map[string]primitiveFunc{
-	"*":         _mult,
-	"+":         _add,
-	"-":         _minus,
-	"<":         _lessThan,
-	"=":         _equals,
-	"append":    _append,
-	"count":     _count,
-	"format":    _format,
-	"head":      _head,
-	"join":      _join,
-	"list":      _list,
-	"list?":     _listP,
-	"read-file": _readFile,
-	"mod":       _mod,
-	"not":       _not,
-	"prepend":   _prepend,
-	"prn":       _prn,
-	"re-find":   _reFind,
-	"re-list":   _reList,
-	"re-match":  _reMatch,
-	"re-split":  _reSplit,
-	"tail":      _tail,
+	"*":          _mult,
+	"+":          _add,
+	"-":          _minus,
+	"<":          _lessThan,
+	"=":          _equals,
+	"append":     _append,
+	"count":      _count,
+	"directory?": _directoryP,
+	"exists?":    _existsP,
+	"file?":      _fileP,
+	"format":     _format,
+	"head":       _head,
+	"join":       _join,
+	"list":       _list,
+	"list?":      _listP,
+	"read-file":  _readFile,
+	"mod":        _mod,
+	"not":        _not,
+	"prepend":    _prepend,
+	"prn":        _prn,
+	"re-find":    _reFind,
+	"re-list":    _reList,
+	"re-match":   _reMatch,
+	"re-split":   _reSplit,
+	"tail":       _tail,
 }
 
 type primitiveFunc func(args []Expression) (Expression, error)
@@ -118,6 +122,10 @@ func _format(args []Expression) (Expression, error) {
 	return NewExpr(ExpString, result), nil
 }
 
+//-----------------------------------------------------------------------------
+// FILE BUILTINS
+//-----------------------------------------------------------------------------
+
 func _readFile(args []Expression) (Expression, error) {
 	argc := len(args)
 	if argc < 1 {
@@ -136,6 +144,66 @@ func _readFile(args []Expression) (Expression, error) {
 	str := string(buffer)
 	return NewExpr(ExpString, str), nil
 }
+
+func _directoryP(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc != 1 {
+		return nilExpr("(directory? name-or-handle) requires 1 arg, you provided %v", argc)
+	}
+
+	path := args[0].string
+	f, err := os.Open(path)
+	if err != nil {
+		return FalseExpression, nil
+	}
+
+	defer f.Close()
+
+	info, err := f.Stat()
+	if err != nil {
+		return FalseExpression, nil
+	}
+
+	return NewExpr(ExpBool, info.IsDir()), nil
+}
+
+func _existsP(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc != 1 {
+		return nilExpr("(exists? name-or-handle) requires 1 arg, you provided %v", argc)
+	}
+
+	if _, err := os.Stat(args[0].string); !os.IsNotExist(err) {
+		return TrueExpression, nil
+	}
+	return FalseExpression, nil
+}
+
+func _fileP(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc != 1 {
+		return nilExpr("(file? name-or-handle) requires 1 arg, you provided %v", argc)
+	}
+
+	path := args[0].string
+	f, err := os.Open(path)
+	if err != nil {
+		return FalseExpression, nil
+	}
+
+	defer f.Close()
+
+	info, err := f.Stat()
+	if err != nil {
+		return FalseExpression, nil
+	}
+
+	return NewExpr(ExpBool, !info.IsDir()), nil
+}
+
+//-----------------------------------------------------------------------------
+// STRING / REGEX BUILTINS
+//-----------------------------------------------------------------------------
 
 func _reFind(args []Expression) (Expression, error) {
 	argc := len(args)
