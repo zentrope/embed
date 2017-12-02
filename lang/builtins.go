@@ -37,6 +37,7 @@ var builtins = map[string]primitiveFunc{
 	"head":      _head,
 	"join":      _join,
 	"list":      _list,
+	"list?":     _listP,
 	"read-file": _readFile,
 	"mod":       _mod,
 	"not":       _not,
@@ -314,9 +315,19 @@ func _not(args []Expression) (Expression, error) {
 	return NewExpr(ExpBool, !args[0].IsTruthy()), nil
 }
 
-// (list x1 x2 ... xn)
 func _list(args []Expression) (Expression, error) {
 	return NewExpr(ExpList, args), nil
+}
+
+func _listP(args []Expression) (Expression, error) {
+	if len(args) != 1 {
+		return nilExpr("(list? val) requires one argument, you provided: %v.", len(args))
+	}
+
+	if args[0].tag == ExpList {
+		return TrueExpression, nil
+	}
+	return FalseExpression, nil
 }
 
 // (prepend x list)
