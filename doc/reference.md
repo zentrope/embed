@@ -143,27 +143,31 @@ __sprintf__) according to the [Golang implementation][printf].
 
 > Return the contents of the named file as a string.
 
-(__open__ file-name) → file-handle <span style="color:red">_;; not implemented_</span>
+(__open__ file-name) → file-handle
 
 > Open a file for reading or writing.
 
-(__close__ file-handle) → nil <span style="color:red">_;; not implemented_</span>
+(__close__ file-handle) → nil
 
 > Close an open file handle.
 
-(__exists?__ file-name-or-handle) → bool
+(__handle?__ file-handle) → bool
+
+> Return true if `file-handle` is a file-handle returned by open.
+
+(__exists?__ file-namee) → bool
 
 > Returns true if the file or directory exists.
 
-(__file?__ file-name-or-handle) => bool
+(__file?__ file-name) => bool
 
-> Returns true of the file is a file.
+> Returns true if the file is a file (not a directory).
 
-(__directory?__ file-name-or-handle) → bool
+(__directory?__ file-name) → bool
 
-> Returns true if the file is a directory.
+> Returns true if the file is a directory (not a file).
 
-(__directories__ file-name-or-handle) → list <span style="color:red">_;; not implemented_</span>
+(__directories__ file-name) → list <span style="color:red">_;; not implemented_</span>
 
 > Return a list of all the files and directories (recursive) starting
 at file-name-or-handle as the root.

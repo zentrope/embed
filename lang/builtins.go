@@ -33,11 +33,13 @@ var builtins = map[string]primitiveFunc{
 	"<":          _lessThan,
 	"=":          _equals,
 	"append":     _append,
+	"close":      _close,
 	"count":      _count,
 	"directory?": _directoryP,
 	"exists?":    _existsP,
 	"file?":      _fileP,
 	"format":     _format,
+	"handle?":    _handleP,
 	"head":       _head,
 	"join":       _join,
 	"list":       _list,
@@ -45,6 +47,7 @@ var builtins = map[string]primitiveFunc{
 	"read-file":  _readFile,
 	"mod":        _mod,
 	"not":        _not,
+	"open":       _open,
 	"prepend":    _prepend,
 	"prn":        _prn,
 	"re-find":    _reFind,
@@ -145,13 +148,59 @@ func _readFile(args []Expression) (Expression, error) {
 	return NewExpr(ExpString, str), nil
 }
 
+func _open(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc != 1 {
+		return nilExpr("(open file-path) requires 1 arg, you provided %v", argc)
+	}
+
+	if args[0].tag != ExpString {
+		return nilExpr("(open file-path) expects file-path to be a string, not %v",
+			ExprTypeName(args[0].tag))
+	}
+	path := args[0].string
+	file, err := os.Open(path)
+	if err != nil {
+		return NilExpression, err
+	}
+
+	return NewExpr(ExpFile, file), nil
+}
+
+func _close(args []Expression) (Expression, error) {
+
+	argc := len(args)
+	if argc != 1 {
+		return nilExpr("(close file-handle) requires 1 arg, you provided %v", argc)
+	}
+
+	if args[0].tag != ExpFile {
+		return nilExpr("(close file-handle) expects file-handle to be a file-handle, not %v",
+			ExprTypeName(args[0].tag))
+	}
+
+	fileData := args[0].file
+	fileData.isOpen = false
+	if err := fileData.file.Close(); err != nil {
+		return NilExpression, err
+	}
+
+	return NilExpression, nil
+}
+
 func _directoryP(args []Expression) (Expression, error) {
 	argc := len(args)
 	if argc != 1 {
-		return nilExpr("(directory? name-or-handle) requires 1 arg, you provided %v", argc)
+		return nilExpr("(directory? file-name) requires 1 arg, you provided %v", argc)
+	}
+
+	if args[0].tag != ExpString {
+		return nilExpr("(directory? file-name) ← file-name should be string, not %v",
+			ExprTypeName(args[0].tag))
 	}
 
 	path := args[0].string
+
 	f, err := os.Open(path)
 	if err != nil {
 		return FalseExpression, nil
@@ -170,10 +219,17 @@ func _directoryP(args []Expression) (Expression, error) {
 func _existsP(args []Expression) (Expression, error) {
 	argc := len(args)
 	if argc != 1 {
-		return nilExpr("(exists? name-or-handle) requires 1 arg, you provided %v", argc)
+		return nilExpr("(exists? file-name) requires 1 arg, you provided %v", argc)
 	}
 
-	if _, err := os.Stat(args[0].string); !os.IsNotExist(err) {
+	if args[0].tag != ExpString {
+		return nilExpr("(exists? file-name) ← file-name should be string, not %v",
+			ExprTypeName(args[0].tag))
+	}
+
+	path := args[0].string
+
+	if _, err := os.Stat(path); !os.IsNotExist(err) {
 		return TrueExpression, nil
 	}
 	return FalseExpression, nil
@@ -182,10 +238,16 @@ func _existsP(args []Expression) (Expression, error) {
 func _fileP(args []Expression) (Expression, error) {
 	argc := len(args)
 	if argc != 1 {
-		return nilExpr("(file? name-or-handle) requires 1 arg, you provided %v", argc)
+		return nilExpr("(file? file-name) requires 1 arg, you provided %v", argc)
+	}
+
+	if args[0].tag != ExpString {
+		return nilExpr("(file? file-name) ← file-name should be string, not %v",
+			ExprTypeName(args[0].tag))
 	}
 
 	path := args[0].string
+
 	f, err := os.Open(path)
 	if err != nil {
 		return FalseExpression, nil
@@ -199,6 +261,20 @@ func _fileP(args []Expression) (Expression, error) {
 	}
 
 	return NewExpr(ExpBool, !info.IsDir()), nil
+}
+
+func _handleP(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc != 1 {
+		return nilExpr("(handle? file-handle) requires 1 arg, you provided %v", argc)
+	}
+
+	if args[0].tag != ExpFile {
+		return nilExpr("(handle? file-handle) ← file-handle should be 'handle', not '%v'",
+			ExprTypeName(args[0].tag))
+	}
+
+	return TrueExpression, nil
 }
 
 //-----------------------------------------------------------------------------

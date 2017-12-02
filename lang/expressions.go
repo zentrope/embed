@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"hash/fnv"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -39,6 +41,7 @@ const (
 	ExpSymbol
 	ExpBool
 	ExpQuote
+	ExpFile // represents a file value?
 )
 
 // ExprTypeName returns the type name of an expression type
@@ -55,6 +58,7 @@ func ExprTypeName(v ExpressionType) string {
 		ExpSymbol:    "symbol",
 		ExpBool:      "bool",
 		ExpQuote:     "quote",
+		ExpFile:      "file",
 	}
 
 	value, ok := names[v]
@@ -67,6 +71,12 @@ func ExprTypeName(v ExpressionType) string {
 // Type returns the type name of an expression
 func (e Expression) Type() string {
 	return ExprTypeName(e.tag)
+}
+
+type fileData struct {
+	file   *os.File
+	isOpen bool
+	path   string
 }
 
 // Expression represents a computation
@@ -85,6 +95,7 @@ type Expression struct {
 	functionParams *Expression
 	functionBody   *Expression
 	functionEnv    *Environment
+	file           *fileData
 }
 
 func hashIt(values ...interface{}) uint32 {
@@ -179,6 +190,17 @@ func NewExpr(tag ExpressionType, value interface{}) Expression {
 	case ExpQuote:
 		exp := value.(Expression)
 		e.quote = &exp
+	case ExpFile:
+		file := value.(*os.File)
+		path, err := filepath.Abs(file.Name())
+		if err != nil {
+			path = file.Name()
+		}
+		e.file = &fileData{
+			file:   file,
+			isOpen: true,
+			path:   path,
+		}
 	default:
 		log.Fatalf("unable to create new expr of type %v", tag)
 	}
@@ -256,6 +278,12 @@ func (e Expression) String() string {
 		return fmt.Sprintf("lambda<%v|%v %v>", e.functionName, e.functionParams, e.functionBody)
 	case ExpFunction:
 		return fmt.Sprintf("fn<%v %v>", e.functionName, e.functionParams)
+	case ExpFile:
+		status := " (closed)"
+		if e.file.isOpen {
+			status = ""
+		}
+		return "file://" + e.file.path + status
 	default:
 		return fmt.Sprintf("unknown→%#v", e)
 	}
