@@ -20,25 +20,13 @@ package lang
 const Core = `
 (defun map (f xs)
 	(if (= xs '())
-		xs
+		'()
 		(prepend (f (head xs)) (map f (tail xs)))))
 
 (defun reduce (f a xs)
 	(if (= xs '())
 		a
 		(reduce f (f a (head xs)) (tail xs))))
-
-(defun filter (f xs)
-	(prn "-------->" xs)
-	(if (= xs '())
-		xs
-		(let (x (head xs)
-					y (tail xs))
-			(prn "xxxxxxxxxxxxxxxxxxxxxxxxxx " x)
-			(prn "yyyyyyyyyyyyyyyyyyyyyyyyyy " y)
-			(if (f x)
-				(prepend x (filter f y))
-				(filter f y)))))
 
 (defun filter (f xs)
 	(if (= xs '())
@@ -55,28 +43,26 @@ const Core = `
 (defun inc (x)
 	(+ x 1))
 
-(defun range' (x)
-	(if (= x 0)
-		(list 0)
-		(append (range' (- x 1)) x)))
-
 (defun range (x)
-	(range' (- x 1)))
+	(let (_range (fn (x)
+								 (if (= x 0)
+									 (list 0)
+									 (append (_range (- x 1)) x))))
+		(_range (- x 1))))
 
 (defun factorial (n)
-	(factorial' 1 n))
-
-(defun factorial' (product n)
-	(if (< n 2)
-		product
-		(factorial' (* product n) (- n 1))))
+	(let (_fact (fn (product n)
+								(if (< n 2)
+									product
+									(_fact (* product n) (- n 1)))))
+		(_fact 1 n)))
 
 (defun take (x lst)
-	(let (take2 (fn (accum ls)
+	(let (_take (fn (accum ls)
 								(if (or (= ls '()) (= (count accum) x))
 									accum
-									(take2 (append accum (head ls)) (tail ls)))))
-		(take2 '() lst)))
+									(_take (append accum (head ls)) (tail ls)))))
+		(_take '() lst)))
 
 (defun even? (x)
 	(= (mod x 2) 0))
@@ -87,7 +73,7 @@ const Core = `
 (defun loop (f lst)
 	(let (_loop (fn (f lst)
 									 (if (= lst '())
-										 '()
+										 nil
 										 (do (f (head lst))
 												 (_loop f (tail lst))))))
 		(_loop f lst)))
@@ -95,20 +81,8 @@ const Core = `
 (defun loop-index (f lst)
 	(let (_loop (fn (index f lst)
 									 (if (= lst '())
-										 '()
+										 nil
 										 (do (f index (head lst))
 												 (_loop (inc index) f (tail lst))))))
 		(_loop 0 f lst)))
-`
-
-// This won't work until "let" allows for recursive definitions.
-const deck = `
-(defun take (x lst)
-	(let (take' (fn (a ls)
-								(if (= ls '())
-										a
-										(if (= (count ls) x)
-											a
-											(take' (append a (head ls)) (tail ls)))))
-		(take' '() lst)))
 `
