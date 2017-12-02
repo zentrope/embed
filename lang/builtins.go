@@ -478,14 +478,16 @@ func _listP(args []Expression) (Expression, error) {
 func _prepend(args []Expression) (Expression, error) {
 
 	if len(args) < 2 {
-		return nilExpr("prepend requires two params: item, list")
+		return nilExpr("(prepend val list) requires two params: item, list")
 	}
 
 	item := args[0]
 	list := args[1]
 
 	if list.tag != ExpList {
-		return nilExpr("prepend: 2nd parameter must be a list")
+		return nilExpr("(prepend val list) 2nd parameter must be a 'list', not '%v'",
+			ExprTypeName(list.tag),
+		)
 	}
 
 	return NewExpr(ExpList, append([]Expression{item}, list.list...)), nil
@@ -552,6 +554,9 @@ func _tail(args []Expression) (Expression, error) {
 
 	list := args[0].list
 
+	if len(list) == 0 {
+		return NilExpression, nil
+	}
 	return NewExpr(ExpList, list[1:]), nil
 }
 
