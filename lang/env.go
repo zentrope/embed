@@ -35,19 +35,18 @@ func NewEnvironment() *Environment {
 		data[name] = NewExpr(ExpPrimitive, fn)
 	}
 
+	data["true"] = TrueExpression
+	data["false"] = FalseExpression
+	data["nil"] = NilExpression
+	data["&stdin"] = StdinExpression
+	data["&stdout"] = StdoutExpression
+	data["&stderr"] = StderrExpression
+
 	return &Environment{global: data, frames: frames}
 }
 
 // Lookup a value in the environment
 func (env *Environment) Lookup(key string) (bool, Expression) {
-	if key == "true" {
-		return true, TrueExpression
-	}
-
-	if key == "false" {
-		return true, FalseExpression
-	}
-
 	for i := len(env.frames) - 1; i >= 0; i-- {
 		value, found := env.frames[i].lookup(key)
 		if found {

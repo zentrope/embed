@@ -1,7 +1,41 @@
 # haki
 
-A rough guide to the functions you can use in the Haki scripting language.
+A rough guide to the functions you can use in the Haki scripting
+language. The basic goals for the langage are:
 
+* Be able to write simple, throw-away shell-script-like utilities.
+
+* Remove the scripting (file i/o, etc) stuff to allow for embedding
+  the language in `Go` programs.
+
+The features of this language are way more than I generally need, but
+way less than is generally needed.
+
+## Special values
+
+__nil__
+
+> Represents the absence-of-value value, or an empty list, or non-truth.
+
+__true__
+
+> Represents a boolean `true` value
+
+__false__
+
+> Represents a boolean `false` value.
+
+__&stdin__
+
+> Represents the `stdin` file-handle.
+
+__&stdout__
+
+> Represents the `stdout` file-handle.
+
+__&stderr__
+
+> Represents the `stderr` file-handle.
 
 ## Math functions
 

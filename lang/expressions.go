@@ -216,6 +216,15 @@ var TrueExpression = NewExpr(ExpBool, true)
 // FalseExpression for a boolean false
 var FalseExpression = NewExpr(ExpBool, false)
 
+// StdinExpression represents the STDIN file handle
+var StdinExpression = NewExpr(ExpFile, os.Stdin)
+
+// StdoutExpression represents the STDOUT file handle
+var StdoutExpression = NewExpr(ExpFile, os.Stdout)
+
+// StderrExpression represents the STDERR file handle
+var StderrExpression = NewExpr(ExpFile, os.Stderr)
+
 // StartsWith returns true if first elem in list is named prefix.
 func (e Expression) StartsWith(prefix string) bool {
 	if e.tag != ExpList {
