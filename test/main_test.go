@@ -25,28 +25,9 @@ import (
 )
 
 func evalForm(form string) (haki.Expression, error) {
-
-	lang := haki.NewInterpreter(haki.TCO)
-	reader := haki.NewReader()
-	reader.Append(haki.Core)
-
-	for {
-		if reader.IsBalanced() {
-			form, err := reader.GetNextForm()
-			if err != nil {
-				if err == haki.ErrEOF {
-					break
-				}
-				fmt.Printf(" ERROR: %v\n", err)
-			}
-			lang.Execute(form)
-			if form == "" {
-				break
-			}
-		}
-	}
-
-	return lang.Execute(form)
+	interpreter := haki.NewInterpreter(haki.TCO)
+	reader := haki.NewReader(haki.Core, form)
+	return interpreter.Run(reader)
 }
 
 type form struct {

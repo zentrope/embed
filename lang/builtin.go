@@ -55,13 +55,11 @@ var builtins = make(primitivesMap, 0)
 func init() {
 	prims := []primitivesMap{
 		defaultBuiltins,
-		fileioBuiltins,
+		fileioBuiltins,  // builtins_fileio
 		hashmapBuiltins, // builtins_hashmap
 	}
 	for _, prim := range prims {
-		fmt.Println("--")
 		for name, fn := range prim {
-			fmt.Printf(" * %v\n", name)
 			builtins[name] = fn
 		}
 	}
