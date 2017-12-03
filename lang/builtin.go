@@ -19,27 +19,15 @@ package lang
 import (
 	"errors"
 	"fmt"
-	"math"
-	"regexp"
 	"strings"
 )
 
 type primitivesMap map[string]primitiveFunc
 
-var defaultBuiltins = map[string]primitiveFunc{
-	"*":        _mult,
-	"+":        _add,
-	"-":        _minus,
-	"<":        _lessThan,
-	"=":        _equals,
-	"format":   _format,
-	"mod":      _mod,
-	"not":      _not,
-	"prn":      _prn,
-	"re-find":  _reFind,
-	"re-list":  _reList,
-	"re-match": _reMatch,
-	"re-split": _reSplit,
+var defaultBuiltins = primitivesMap{
+	"=":   _equals,
+	"not": _not,
+	"prn": _prn,
 }
 
 var builtins = make(primitivesMap, 0)
@@ -47,6 +35,8 @@ var builtins = make(primitivesMap, 0)
 func init() {
 	prims := []primitivesMap{
 		defaultBuiltins,
+		mathBuiltins,    // builtins_math
+		stringBuiltins,  // builtins_string
 		listBuiltins,    // builtins_list
 		fileioBuiltins,  // builtins_fileio
 		hashmapBuiltins, // builtins_hashmap
@@ -106,191 +96,6 @@ func toExpr(x float64) Expression {
 	return NewExpr(ExpFloat, x)
 }
 
-//-----------------------------------------------------------------------------
-// STRING / REGEX BUILTINS
-//-----------------------------------------------------------------------------
-
-func _format(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc < 1 {
-		return nilExpr("(format pattern ...args) requires at least the first argument.")
-	}
-
-	if args[0].tag != ExpString {
-		return nilExpr("(format pattern ...args) the pattern argument must be a string.")
-	}
-
-	pattern := args[0].string
-	params := make([]interface{}, 0)
-	for _, a := range args[1:] {
-		params = append(params, a.Value())
-	}
-
-	result := fmt.Sprintf(pattern, params...)
-	return NewExpr(ExpString, result), nil
-}
-
-func _reFind(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc < 2 {
-		return nilExpr("(re-find re string) requires 2 args, you provided %v", argc)
-	}
-
-	if err := verifyStrings(args); err != nil {
-		return NilExpression, err
-	}
-
-	re, err := regexp.Compile(args[0].string)
-	if err != nil {
-		return NilExpression, err
-	}
-
-	return NewExpr(ExpString, re.FindString(args[1].string)), nil
-}
-
-func _reMatch(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc < 2 {
-		return nilExpr("(re-match re string) requires 2 args, you provided %v", argc)
-	}
-
-	if err := verifyStrings(args); err != nil {
-		return NilExpression, err
-	}
-
-	re, err := regexp.Compile(args[0].string)
-	if err != nil {
-		return NilExpression, err
-	}
-
-	return NewExpr(ExpBool, re.MatchString(args[1].string)), nil
-}
-
-func _reSplit(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc < 2 {
-		return nilExpr("(re-split re string) requires 2 args, you provided %v", argc)
-	}
-
-	if err := verifyStrings(args); err != nil {
-		return NilExpression, err
-	}
-
-	re, err := regexp.Compile(args[0].string)
-	if err != nil {
-		return NilExpression, err
-	}
-
-	words := re.Split(args[1].string, -1)
-
-	es := make([]Expression, 0)
-
-	for _, word := range words {
-		es = append(es, NewExpr(ExpString, word))
-	}
-
-	return NewExpr(ExpList, es), nil
-}
-
-func _reList(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc < 2 {
-		return nilExpr("(re-list re string) requires 2 args, you provided %v", argc)
-	}
-
-	if err := verifyStrings(args); err != nil {
-		return NilExpression, err
-	}
-
-	re, err := regexp.Compile(args[0].string)
-	if err != nil {
-		return NilExpression, err
-	}
-
-	words := re.FindAllString(args[1].string, -1)
-
-	es := make([]Expression, 0)
-
-	for _, word := range words {
-		es = append(es, NewExpr(ExpString, word))
-	}
-
-	return NewExpr(ExpList, es), nil
-}
-
-func _mult(args []Expression) (Expression, error) {
-	if err := verifyNums(args); err != nil {
-		return NilExpression, err
-	}
-	result := 1.0
-	for _, arg := range args {
-		num, err := asNumber(arg)
-		if err != nil {
-			return NilExpression, err
-		}
-		result = result * num
-	}
-	return toExpr(result), nil
-}
-
-func _lessThan(args []Expression) (Expression, error) {
-
-	argc := len(args)
-
-	if argc < 1 {
-		return nilExpr("(< a b ... n) requires at least 1 arg")
-	}
-
-	if err := verifyNums(args); err != nil {
-		return NilExpression, err
-	}
-
-	sentinel, err := asNumber(args[0])
-	if err != nil {
-		return NilExpression, err
-	}
-
-	for _, arg := range args[1:] {
-		candidate, err := asNumber(arg)
-		if err != nil {
-			return NilExpression, err
-		}
-		if candidate <= sentinel {
-			return FalseExpression, nil
-		}
-		sentinel = candidate
-	}
-
-	return TrueExpression, nil
-}
-
-func _mod(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc != 2 {
-		return nilExpr("(mod num div) takes 2 args, you provided %v", argc)
-	}
-
-	num := args[0]
-	div := args[1]
-
-	n := num.float
-	d := div.float
-
-	if num.tag == ExpInteger {
-		n = float64(num.integer)
-	}
-	if div.tag == ExpInteger {
-		d = float64(div.integer)
-	}
-
-	result := math.Mod(n, d)
-
-	if isIntegral(result) {
-		return NewExpr(ExpInteger, int64(result)), nil
-	}
-	return NewExpr(ExpFloat, result), nil
-}
-
 func _not(args []Expression) (Expression, error) {
 	if len(args) > 1 {
 		return nilExpr("(not expr) takes one parameter, you provided %v", len(args))
@@ -315,68 +120,6 @@ func _equals(args []Expression) (Expression, error) {
 		}
 	}
 	return TrueExpression, nil
-}
-
-func _add(args []Expression) (Expression, error) {
-	var result float64
-	for _, arg := range args {
-		switch arg.tag {
-		case ExpFloat:
-			result = result + float64(arg.float)
-		case ExpInteger:
-			result = result + float64(arg.integer)
-		default:
-			return nilExpr("unknown argument type for [%v], [int/float] expected, got [%v]", arg, arg.Type())
-		}
-	}
-
-	if isIntegral(result) {
-		return NewExpr(ExpInteger, int64(result)), nil
-	}
-	return NewExpr(ExpFloat, result), nil
-}
-
-func _minus(args []Expression) (Expression, error) {
-
-	if len(args) < 1 {
-		return NilExpression, errors.New("`-` requires 1 or more args")
-	}
-
-	var result float64
-
-	switch args[0].tag {
-	case ExpFloat:
-		result = float64(args[0].float)
-	case ExpInteger:
-		result = float64(args[0].integer)
-	default:
-		return nilExpr("In '-', unknown argument type [%v], [int/float] expected, got [%v]", args[0], args[0].Type())
-	}
-
-	if len(args) == 1 {
-		result = -1.0 * result
-
-		if isIntegral(result) {
-			return NewExpr(ExpInteger, int64(result)), nil
-		}
-		return NewExpr(ExpFloat, result), nil
-	}
-
-	for _, arg := range args[1:] {
-		switch arg.tag {
-		case ExpFloat:
-			result = result - float64(arg.float)
-		case ExpInteger:
-			result = result - float64(arg.integer)
-		default:
-			return nilExpr("In '-', unknown argument type [%v], [int/float] expected, got [%v]", arg, arg.Type())
-		}
-	}
-
-	if isIntegral(result) {
-		return NewExpr(ExpInteger, int64(result)), nil
-	}
-	return NewExpr(ExpFloat, result), nil
 }
 
 func _prn(args []Expression) (Expression, error) {
