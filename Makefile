@@ -47,8 +47,7 @@ test: ## Run tests
 testv: ## Run tests in verbose mode
 	go test -v $(PACKAGE)/scraelang/
 
-init: ## Initialize the project
-	$(MAKE) vendor
+init: vendor ## Initialize the project
 
 help: ## Produce this list of goals
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
