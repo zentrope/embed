@@ -41,7 +41,8 @@ const (
 	ExpSymbol
 	ExpBool
 	ExpQuote
-	ExpFile // represents a file value?
+	ExpFile // represents a file-handle
+	ExpHashMap
 )
 
 // ExprTypeName returns the type name of an expression type
@@ -96,6 +97,7 @@ type Expression struct {
 	functionBody   *Expression
 	functionEnv    *Environment
 	file           *fileData
+	hashMap        *HakiHashMap
 }
 
 func hashIt(values ...interface{}) uint32 {
@@ -160,6 +162,10 @@ func NewLambdaExpr(env *Environment, name, params, body Expression) Expression {
 // NewExpr constructs a new expression of the given type
 func NewExpr(tag ExpressionType, value interface{}) Expression {
 
+	if tag == ExpHashMap {
+		return NewHashMapExpr(value.(*HakiHashMap))
+	}
+
 	data := make([]interface{}, 0)
 	data = append(data, tag)
 
@@ -202,7 +208,7 @@ func NewExpr(tag ExpressionType, value interface{}) Expression {
 			path:   path,
 		}
 	default:
-		log.Fatalf("unable to create new expr of type %v", tag)
+		log.Fatalf("unable to create new expr of type %v", ExprTypeName(tag))
 	}
 	return e
 }
@@ -293,6 +299,8 @@ func (e Expression) String() string {
 			status = ""
 		}
 		return "file://" + e.file.path + status
+	case ExpHashMap:
+		return e.hashMap.String()
 	default:
 		return fmt.Sprintf("unknown→%#v", e)
 	}

@@ -137,6 +137,20 @@ a new `initial-value` per `list` item.
 > Applies `fn` to an incrementing index and each `val` in `list` (example: `(fn (idx
 > val) (prn idx val))`) for side-effects.
 
+## Hash Map Functions
+
+(__hmap__ k<sub>1</sub> v<sub>1</sub> ... k<sub>n</sub> v<sub>n</sub>) → hash-map
+
+> Construct a hash-map based on the list of `k`s and `v`s.
+
+(__hget__ hash-map k) → val | nil
+
+> Return the value found at position `k` in the `hash-map` or `nil` if not found.
+
+(__hset__ hash-map k<sub>1</sub> v<sub>1</sub> ... k<sub>n</sub> v<sub>n</sub>) → hash-map
+
+> Return a new hash-map adding each `k/v` pair to the old `hash-map`.
+
 ## Print functions
 
 (__prn__ val<sub>1</sub> val<sub>2</sub> ... val<sub>n</sub>) → nil
