@@ -29,6 +29,29 @@ var mathBuiltins = primitivesMap{
 	"mod": _mod,
 }
 
+func isIntegral(val float64) bool {
+	return val == float64(int64(val))
+}
+
+func toExpr(x float64) Expression {
+	if isIntegral(x) {
+		return NewExpr(ExpInteger, int64(x))
+	}
+	return NewExpr(ExpFloat, x)
+}
+
+func verifyNums(args []Expression) error {
+	for _, arg := range args {
+		switch arg.tag {
+		case ExpInteger, ExpFloat:
+			continue
+		default:
+			return errors.New("all arguments must be numbers")
+		}
+	}
+	return nil
+}
+
 func _mult(args []Expression) (Expression, error) {
 	if err := verifyNums(args); err != nil {
 		return NilExpression, err
