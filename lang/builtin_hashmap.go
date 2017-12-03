@@ -81,10 +81,16 @@ func NewHashMapExpr(hmap *HakiHashMap) Expression {
 	}
 }
 
+//-----------------------------------------------------------------------------
+// implementations
+//-----------------------------------------------------------------------------
+
 func _hmap(args []Expression) (Expression, error) {
 	argc := len(args)
+	sig := "(hmap k v ...)"
+
 	if (argc % 2) != 0 {
-		return nilExpr("(hmap k v ...) requires an even number of params.")
+		return nilExpr("%v expects an even number of params.", sig)
 	}
 
 	hmap := newHakiMap()
@@ -98,23 +104,25 @@ func _hmap(args []Expression) (Expression, error) {
 }
 
 func _hmapP(args []Expression) (Expression, error) {
+	sig := "(hmap? val)"
 	argc := len(args)
 	if argc > 1 {
-		return nilExpr("(hmap? val) takes 1 arg, you provided %v", argc)
+		return nilExpr("%v takes 1 arg, you provided %v", sig, argc)
 	}
 
 	return NewExpr(ExpBool, args[0].tag == ExpHashMap), nil
 }
 
 func _hkeys(args []Expression) (Expression, error) {
+	sig := "(hkeys m)"
 	argc := len(args)
 	if argc != 1 {
-		return nilExpr("(hkeys m) requires at least 1 arg, you provided %v",
-			argc)
+		return nilExpr("%v expects at least 1 arg, you provided %v",
+			sig, argc)
 	}
 
 	if args[0].tag != ExpHashMap {
-		return nilExpr("(hkeys m) requires 'm' to be a 'hash-map', not '%v'",
+		return nilExpr("%v expects 'm' to be a 'hash-map', not '%v'", sig,
 			ExprTypeName(args[0].tag))
 	}
 
@@ -127,14 +135,15 @@ func _hkeys(args []Expression) (Expression, error) {
 }
 
 func _hvals(args []Expression) (Expression, error) {
+	sig := "(hvals m)"
 	argc := len(args)
 	if argc != 1 {
-		return nilExpr("(hvals m) requires at least 1 arg, you provided %v",
-			argc)
+		return nilExpr("%v expects at least 1 arg, you provided %v", sig, argc)
 	}
 
 	if args[0].tag != ExpHashMap {
-		return nilExpr("(hvals m) requires 'm' to be a 'hash-map', not '%v'",
+		return nilExpr("%v expects 'm' to be a 'hash-map', not '%v'",
+			sig,
 			ExprTypeName(args[0].tag))
 	}
 
@@ -147,14 +156,14 @@ func _hvals(args []Expression) (Expression, error) {
 }
 
 func _hget(args []Expression) (Expression, error) {
+	sig := "(hget m k)"
 	argc := len(args)
 	if argc < 2 {
-		return nilExpr("(hget m k) requires at least 2 args, you provided %v",
-			argc)
+		return nilExpr("%v expects at least 2 args, you provided %v", sig, argc)
 	}
 
 	if args[0].tag != ExpHashMap {
-		return nilExpr("(hget m k) requires 'm' to be a 'hash-map', not '%v'",
+		return nilExpr("%v expects 'm' to be a 'hash-map', not '%v'", sig,
 			ExprTypeName(args[0].tag))
 	}
 
@@ -165,14 +174,15 @@ func _hget(args []Expression) (Expression, error) {
 }
 
 func _hset(args []Expression) (Expression, error) {
+	sig := "(hset m k v ...)"
 	argc := len(args)
 	if argc < 3 {
-		return nilExpr("(hset m k v ...) requires at least 3 args, you provided %v",
+		return nilExpr("%v expects at least 3 args, you provided %v", sig,
 			argc)
 	}
 
 	if args[0].tag != ExpHashMap {
-		return nilExpr("(hset m k v ...) requires 'm' to be a 'hash-map', not '%v'",
+		return nilExpr("%v expects 'm' to be a 'hash-map', not '%v'", sig,
 			ExprTypeName(args[0].tag))
 	}
 
@@ -180,7 +190,7 @@ func _hset(args []Expression) (Expression, error) {
 
 	keyValues := args[1:]
 	if (len(keyValues) % 2) != 0 {
-		return nilExpr("(hset m k v ...) requires an even number of k/v params, you provided %v.",
+		return nilExpr("(hset m k v ...) expects an even number of k/v params, you provided %v.",
 			len(keyValues))
 	}
 
