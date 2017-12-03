@@ -19,9 +19,7 @@ package lang
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"math"
-	"os"
 	"regexp"
 	"strings"
 )
@@ -29,34 +27,27 @@ import (
 type primitivesMap map[string]primitiveFunc
 
 var defaultBuiltins = map[string]primitiveFunc{
-	"*":          _mult,
-	"+":          _add,
-	"-":          _minus,
-	"<":          _lessThan,
-	"=":          _equals,
-	"append":     _append,
-	"close":      _close,
-	"count":      _count,
-	"directory?": _directoryP,
-	"exists?":    _existsP,
-	"file?":      _fileP,
-	"format":     _format,
-	"handle?":    _handleP,
-	"head":       _head,
-	"join":       _join,
-	"list":       _list,
-	"list?":      _listP,
-	"read-file":  _readFile,
-	"mod":        _mod,
-	"not":        _not,
-	"open":       _open,
-	"prepend":    _prepend,
-	"prn":        _prn,
-	"re-find":    _reFind,
-	"re-list":    _reList,
-	"re-match":   _reMatch,
-	"re-split":   _reSplit,
-	"tail":       _tail,
+	"*":        _mult,
+	"+":        _add,
+	"-":        _minus,
+	"<":        _lessThan,
+	"=":        _equals,
+	"append":   _append,
+	"count":    _count,
+	"format":   _format,
+	"head":     _head,
+	"join":     _join,
+	"list":     _list,
+	"list?":    _listP,
+	"mod":      _mod,
+	"not":      _not,
+	"prepend":  _prepend,
+	"prn":      _prn,
+	"re-find":  _reFind,
+	"re-list":  _reList,
+	"re-match": _reMatch,
+	"re-split": _reSplit,
+	"tail":     _tail,
 }
 
 var builtins = make(primitivesMap, 0)
@@ -64,10 +55,13 @@ var builtins = make(primitivesMap, 0)
 func init() {
 	prims := []primitivesMap{
 		defaultBuiltins,
+		fileioBuiltins,
 		hashmapBuiltins, // builtins_hashmap
 	}
 	for _, prim := range prims {
+		fmt.Println("--")
 		for name, fn := range prim {
+			fmt.Printf(" * %v\n", name)
 			builtins[name] = fn
 		}
 	}
@@ -121,6 +115,10 @@ func toExpr(x float64) Expression {
 	return NewExpr(ExpFloat, x)
 }
 
+//-----------------------------------------------------------------------------
+// STRING / REGEX BUILTINS
+//-----------------------------------------------------------------------------
+
 func _format(args []Expression) (Expression, error) {
 	argc := len(args)
 	if argc < 1 {
@@ -140,162 +138,6 @@ func _format(args []Expression) (Expression, error) {
 	result := fmt.Sprintf(pattern, params...)
 	return NewExpr(ExpString, result), nil
 }
-
-//-----------------------------------------------------------------------------
-// FILE BUILTINS
-//-----------------------------------------------------------------------------
-
-func _readFile(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc < 1 {
-		return nilExpr("(read-file file-name) requires 1 arg, you provided %v", argc)
-	}
-
-	if err := verifyStrings(args); err != nil {
-		return NilExpression, err
-	}
-
-	buffer, err := ioutil.ReadFile(args[0].string)
-	if err != nil {
-		return NilExpression, err
-	}
-
-	str := string(buffer)
-	return NewExpr(ExpString, str), nil
-}
-
-func _open(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc != 1 {
-		return nilExpr("(open file-path) requires 1 arg, you provided %v", argc)
-	}
-
-	if args[0].tag != ExpString {
-		return nilExpr("(open file-path) expects file-path to be a string, not %v",
-			ExprTypeName(args[0].tag))
-	}
-	path := args[0].string
-	file, err := os.Open(path)
-	if err != nil {
-		return NilExpression, err
-	}
-
-	return NewExpr(ExpFile, file), nil
-}
-
-func _close(args []Expression) (Expression, error) {
-
-	argc := len(args)
-	if argc != 1 {
-		return nilExpr("(close file-handle) requires 1 arg, you provided %v", argc)
-	}
-
-	if args[0].tag != ExpFile {
-		return nilExpr("(close file-handle) expects file-handle to be a file-handle, not %v",
-			ExprTypeName(args[0].tag))
-	}
-
-	fileData := args[0].file
-	fileData.isOpen = false
-	if err := fileData.file.Close(); err != nil {
-		return NilExpression, err
-	}
-
-	return NilExpression, nil
-}
-
-func _directoryP(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc != 1 {
-		return nilExpr("(directory? file-name) requires 1 arg, you provided %v", argc)
-	}
-
-	if args[0].tag != ExpString {
-		return nilExpr("(directory? file-name) ← file-name should be string, not %v",
-			ExprTypeName(args[0].tag))
-	}
-
-	path := args[0].string
-
-	f, err := os.Open(path)
-	if err != nil {
-		return FalseExpression, nil
-	}
-
-	defer f.Close()
-
-	info, err := f.Stat()
-	if err != nil {
-		return FalseExpression, nil
-	}
-
-	return NewExpr(ExpBool, info.IsDir()), nil
-}
-
-func _existsP(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc != 1 {
-		return nilExpr("(exists? file-name) requires 1 arg, you provided %v", argc)
-	}
-
-	if args[0].tag != ExpString {
-		return nilExpr("(exists? file-name) ← file-name should be string, not %v",
-			ExprTypeName(args[0].tag))
-	}
-
-	path := args[0].string
-
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
-		return TrueExpression, nil
-	}
-	return FalseExpression, nil
-}
-
-func _fileP(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc != 1 {
-		return nilExpr("(file? file-name) requires 1 arg, you provided %v", argc)
-	}
-
-	if args[0].tag != ExpString {
-		return nilExpr("(file? file-name) ← file-name should be string, not %v",
-			ExprTypeName(args[0].tag))
-	}
-
-	path := args[0].string
-
-	f, err := os.Open(path)
-	if err != nil {
-		return FalseExpression, nil
-	}
-
-	defer f.Close()
-
-	info, err := f.Stat()
-	if err != nil {
-		return FalseExpression, nil
-	}
-
-	return NewExpr(ExpBool, !info.IsDir()), nil
-}
-
-func _handleP(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc != 1 {
-		return nilExpr("(handle? file-handle) requires 1 arg, you provided %v", argc)
-	}
-
-	if args[0].tag != ExpFile {
-		return nilExpr("(handle? file-handle) ← file-handle should be 'handle', not '%v'",
-			ExprTypeName(args[0].tag))
-	}
-
-	return TrueExpression, nil
-}
-
-//-----------------------------------------------------------------------------
-// STRING / REGEX BUILTINS
-//-----------------------------------------------------------------------------
 
 func _reFind(args []Expression) (Expression, error) {
 	argc := len(args)
