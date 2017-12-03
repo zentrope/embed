@@ -15,7 +15,7 @@ real-world tasks.
 
 ## docs
 
- * [function reference](docs/reference.md)
+ * [function reference](doc/reference.md)
 
 ## todo
 
