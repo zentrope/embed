@@ -32,22 +32,14 @@ var defaultBuiltins = map[string]primitiveFunc{
 	"-":        _minus,
 	"<":        _lessThan,
 	"=":        _equals,
-	"append":   _append,
-	"count":    _count,
 	"format":   _format,
-	"head":     _head,
-	"join":     _join,
-	"list":     _list,
-	"list?":    _listP,
 	"mod":      _mod,
 	"not":      _not,
-	"prepend":  _prepend,
 	"prn":      _prn,
 	"re-find":  _reFind,
 	"re-list":  _reList,
 	"re-match": _reMatch,
 	"re-split": _reSplit,
-	"tail":     _tail,
 }
 
 var builtins = make(primitivesMap, 0)
@@ -55,6 +47,7 @@ var builtins = make(primitivesMap, 0)
 func init() {
 	prims := []primitivesMap{
 		defaultBuiltins,
+		listBuiltins,    // builtins_list
 		fileioBuiltins,  // builtins_fileio
 		hashmapBuiltins, // builtins_hashmap
 	}
@@ -225,15 +218,6 @@ func _reList(args []Expression) (Expression, error) {
 	return NewExpr(ExpList, es), nil
 }
 
-func _count(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc < 1 {
-		return nilExpr("(count lst) ← lst should be a list")
-	}
-
-	return NewExpr(ExpInteger, int64(len(args[0].list))), nil
-}
-
 func _mult(args []Expression) (Expression, error) {
 	if err := verifyNums(args); err != nil {
 		return NilExpression, err
@@ -313,107 +297,6 @@ func _not(args []Expression) (Expression, error) {
 	}
 
 	return NewExpr(ExpBool, !args[0].IsTruthy()), nil
-}
-
-func _list(args []Expression) (Expression, error) {
-	return NewExpr(ExpList, args), nil
-}
-
-func _listP(args []Expression) (Expression, error) {
-	if len(args) != 1 {
-		return nilExpr("(list? val) requires one argument, you provided: %v.", len(args))
-	}
-
-	if args[0].tag == ExpList {
-		return TrueExpression, nil
-	}
-	return FalseExpression, nil
-}
-
-// (prepend x list)
-func _prepend(args []Expression) (Expression, error) {
-
-	if len(args) < 2 {
-		return nilExpr("(prepend val list) requires two params: item, list")
-	}
-
-	item := args[0]
-	list := args[1]
-
-	if list.tag != ExpList {
-		return nilExpr("(prepend val list) 2nd parameter must be a 'list', not '%v'",
-			ExprTypeName(list.tag),
-		)
-	}
-
-	return NewExpr(ExpList, append([]Expression{item}, list.list...)), nil
-}
-
-// (append list x)
-func _append(args []Expression) (Expression, error) {
-	if len(args) != 2 {
-		return nilExpr("append takes two args (list, item), you provided %v", len(args))
-	}
-
-	list := args[0]
-	item := args[1]
-
-	if list.tag != ExpList {
-		return nilExpr("append's first arg (list, item) must be a list")
-	}
-
-	return NewExpr(ExpList, append(list.list, item)), nil
-}
-
-// (join list1 list2 ... listn)
-func _join(args []Expression) (Expression, error) {
-
-	for _, e := range args {
-		if e.tag != ExpList {
-			return nilExpr("join takes only list params, %v is not a list", e)
-		}
-	}
-
-	newList := make([]Expression, 0)
-	for _, l := range args {
-		newList = append(newList, l.list...)
-	}
-
-	return NewExpr(ExpList, newList), nil
-}
-
-func _head(args []Expression) (Expression, error) {
-	if len(args) == 0 {
-		return NilExpression, errors.New("head requires a parameter")
-	}
-
-	if !args[0].IsList() {
-		return NilExpression, errors.New("head requires a list parameter")
-	}
-
-	list := args[0].list
-	if len(list) == 0 {
-		return NilExpression, nil
-	}
-	return list[0], nil
-}
-
-func _tail(args []Expression) (Expression, error) {
-
-	if len(args) == 0 {
-		return NilExpression, errors.New("tail requires a parameter")
-	}
-
-	if !args[0].IsList() {
-		return NilExpression, errors.New("tail requires a list parameter")
-	}
-
-	list := args[0].list
-
-	if len(list) == 0 {
-		return NilExpression, nil
-	}
-	return NewExpr(ExpList, list[1:]), nil
 }
 
 func _equals(args []Expression) (Expression, error) {
