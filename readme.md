@@ -1,92 +1,39 @@
 # haki
 
-Now is the time for all good men to come to the aid of their
-country. Now is the time for all good to com
+Lisp interpreter for writing scripts and hopefully as something you
+could embed in Golang programs.
 
-A small embeddable (in Golang programs) interpreter to explore the
-idea of using a small language to create little grammars or parsers or
-evaluators or rules you can add to a Golang program as data. Something
-you could use if a single regular expression doesn't really work all
-that well for you.
+## status
 
-I'm thinking this is a kind of string processing kind of DSL. You can
-pass in a giant text file, and a bit of script and it can return parts
-of the file as a result, or build an aggregate out of it.
+Incomplete. Until I have a complete set of file/io functions as well
+as shell-exec functions, this interpreter isn't really useful for any
+real-world tasks.
 
 ## install
 
     $ go get -u github.com/zentrope/haki/cmd/haki
 
+## docs
+
+ * [function reference](docs/reference.md)
+
 ## todo
 
-This experiment is designed to be something you'd use to transform
-data according to rules that are best expressed as regular code so I'm
-not going to worry too much about file IO or socket connections. You
-pass in a string, you get another string (or a collection of strings)
-back.
+ * hash-map data structure and functions
+ * file io
+ * shell cmd exec
+ * version info
+ * command-line arguments
 
-### interpreter
-
-* [ ] **cond** special form
-* [ ] mutation (Clojure's **swap!/reset!**)
-* [ ] **&rest** parameters
-* [ ] comments
-* [ ] simpler API (hide environment, tokenizer, parser steps)
-* [ ] load-code and load-data (handy for interactive dev/testing)
-* [ ] consider a [cps][cps] interpreter (try/catch?)
-* [ ] support for laziness for processing large files?
-* [ ] a mode to trace recursion depth
-* [x] ~~**let** should allow recursive bindings~~ (TCO interpreter)
-* [x] ~~test starter (enough to start using it for new dev and changes)~~
-* [x] ~~repl~~
-* [x] ~~top level definitions~~
-* [x] ~~top level functions~~
-* [x] ~~do expression (special)~~
-* [x] ~~let special form~~
-* [x] ~~anonymous "lambda" functions~~
-* [x] ~~load core/prelude functions (written in DSL)~~
-* [x] ~~implement prelude: map, reduce, range, filter~~
-* [x] ~~try a tail-call optimized interpreter?~~
-
-[cps]: https://stackoverflow.com/a/5986168
-
-### builtins
-
-* [ ] hashmap data structure and associated functions
-* [ ] consider map, reduce, filter as builtins
-* [ ] apply -- builtin function
-* [x] ~~builtin: regex matching~~
-* [ ] builtin: regex group stuff
-* [ ] builtins: string functions
-* [ ] figure out a better way to do math logic builtins
-* [ ] mutability
-* [ ] list comprehensions?
-* [x] ~~count~~
-* [x] ~~list -- builtin list function~~
-* [x] ~~prepend -- builtin list function~~
-* [x] ~~append -- builtin list function~~
-* [x] ~~join -- builtin list function~~
-
-### issues
-
-* [ ] def and defun should always store in global env
-* [ ] load/reader for core messes up with blanks at end of string
-* [x] ~~Repl should read all forms before presenting prompt~~
-* [x] ~~Pressing "return" in repl should not generate EOF error~~
-* [x] ~~`(map (fn (x) (+ 2 x)) (list 1 2 3))` tries to eval '1~~
-* [x] ~~`(map (fn (x) (+ 2 x)) '(1 2 3))` tries to eval '1~~
-
-### non-goals
-
-Probably won't do these:
+## non-goals
 
 * macros
-* threading (this is meant to be embedded)
-
+* threading
+* exceptions (try/catch, call/cc, etc)
 
 ## looks
 
-Stuff you can do at the `repl` as of this writing.
+Stuff you can do at the `repl` or when invoked as a script:
 
 ``` emacs-lisp
 (def a 2)
