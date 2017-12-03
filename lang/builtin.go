@@ -26,7 +26,9 @@ import (
 	"strings"
 )
 
-var builtins = map[string]primitiveFunc{
+type primitivesMap map[string]primitiveFunc
+
+var defaultBuiltins = map[string]primitiveFunc{
 	"*":          _mult,
 	"+":          _add,
 	"-":          _minus,
@@ -41,9 +43,6 @@ var builtins = map[string]primitiveFunc{
 	"format":     _format,
 	"handle?":    _handleP,
 	"head":       _head,
-	"hget":       _hget,
-	"hmap":       _hmap,
-	"hset":       _hset,
 	"join":       _join,
 	"list":       _list,
 	"list?":      _listP,
@@ -58,6 +57,20 @@ var builtins = map[string]primitiveFunc{
 	"re-match":   _reMatch,
 	"re-split":   _reSplit,
 	"tail":       _tail,
+}
+
+var builtins = make(primitivesMap, 0)
+
+func init() {
+	prims := []primitivesMap{
+		defaultBuiltins,
+		hashmapBuiltins, // builtins_hashmap
+	}
+	for _, prim := range prims {
+		for name, fn := range prim {
+			builtins[name] = fn
+		}
+	}
 }
 
 type primitiveFunc func(args []Expression) (Expression, error)

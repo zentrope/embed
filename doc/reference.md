@@ -11,6 +11,7 @@ language. The basic goals for the langage are:
 The features of this language are way more than I generally need, but
 way less than is generally needed.
 
+
 ## Special values
 
 __nil__
@@ -143,6 +144,19 @@ a new `initial-value` per `list` item.
 
 > Construct a hash-map based on the list of `k`s and `v`s.
 
+(__hmap?__ val) → bool
+
+> Return true of `val` is of type `hash-map`.
+
+(__hkeys__ m) → list
+
+> Return all the keys in the hash-map `m` as a list.
+
+(__hvals__ m) → list
+
+> Return all the vals in the hash-map `m` as a list.
+
+
 (__hget__ hash-map k) → val | nil
 
 > Return the value found at position `k` in the `hash-map` or `nil` if not found.
@@ -150,6 +164,8 @@ a new `initial-value` per `list` item.
 (__hset__ hash-map k<sub>1</sub> v<sub>1</sub> ... k<sub>n</sub> v<sub>n</sub>) → hash-map
 
 > Return a new hash-map adding each `k/v` pair to the old `hash-map`.
+
+
 
 ## Print functions
 

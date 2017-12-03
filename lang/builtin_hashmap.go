@@ -21,6 +21,15 @@ import (
 	"strings"
 )
 
+var hashmapBuiltins = primitivesMap{
+	"hget":  _hget,
+	"hmap":  _hmap,
+	"hset":  _hset,
+	"hmap?": _hmapP,
+	"hkeys": _hkeys,
+	"hvals": _hvals,
+}
+
 // HakiHashMap represents a hash-map type in the Haki language.
 type HakiHashMap struct {
 	keys map[uint32]Expression
@@ -86,6 +95,55 @@ func _hmap(args []Expression) (Expression, error) {
 	}
 
 	return NewHashMapExpr(hmap), nil
+}
+
+func _hmapP(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc > 1 {
+		return nilExpr("(hmap? val) takes 1 arg, you provided %v", argc)
+	}
+
+	return NewExpr(ExpBool, args[0].tag == ExpHashMap), nil
+}
+
+func _hkeys(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc != 1 {
+		return nilExpr("(hkeys m) requires at least 1 arg, you provided %v",
+			argc)
+	}
+
+	if args[0].tag != ExpHashMap {
+		return nilExpr("(hkeys m) requires 'm' to be a 'hash-map', not '%v'",
+			ExprTypeName(args[0].tag))
+	}
+
+	exprs := make([]Expression, 0)
+	for _, v := range args[0].hashMap.keys {
+		exprs = append(exprs, v)
+	}
+
+	return NewExpr(ExpList, exprs), nil
+}
+
+func _hvals(args []Expression) (Expression, error) {
+	argc := len(args)
+	if argc != 1 {
+		return nilExpr("(hvals m) requires at least 1 arg, you provided %v",
+			argc)
+	}
+
+	if args[0].tag != ExpHashMap {
+		return nilExpr("(hvals m) requires 'm' to be a 'hash-map', not '%v'",
+			ExprTypeName(args[0].tag))
+	}
+
+	exprs := make([]Expression, 0)
+	for _, v := range args[0].hashMap.vals {
+		exprs = append(exprs, v)
+	}
+
+	return NewExpr(ExpList, exprs), nil
 }
 
 func _hget(args []Expression) (Expression, error) {
