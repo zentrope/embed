@@ -22,12 +22,13 @@ import (
 )
 
 var hashmapBuiltins = primitivesMap{
-	"hget":  _hget,
-	"hmap":  _hmap,
-	"hset":  _hset,
-	"hmap?": _hmapP,
-	"hkeys": _hkeys,
-	"hvals": _hvals,
+	"hget":    _hget,
+	"hmap":    _hmap,
+	"hset":    _hset,
+	"hmap?":   _hmapP,
+	"hkeys":   _hkeys,
+	"hvals":   _hvals,
+	"hget-in": _hgetin,
 }
 
 // HakiHashMap represents a hash-map type in the Haki language.
@@ -203,4 +204,65 @@ func _hset(args []Expression) (Expression, error) {
 	}
 
 	return NewHashMapExpr(newMap), nil
+}
+
+func _hgetin(args []Expression) (Expression, error) {
+	sig := "(hget-in m [k & ks])"
+
+	if err := runCheckers(sig, args, ckArity(2), ckMap(0), ckList(1)); err != nil {
+		return NilExpression, err
+	}
+
+	m := args[0]
+
+	for _, k := range args[1].list {
+		if m.tag == ExpHashMap {
+			m = m.hashMap.vals[k.hash]
+		} else {
+			return NilExpression, nil
+		}
+	}
+	return m, nil
+}
+
+//-----------------------------------------------------------------------------
+// Type checking (used in here as a test case)
+//-----------------------------------------------------------------------------
+
+type ckFn func(string, []Expression) error
+
+func ckArity(numArgs int) ckFn {
+	return func(sig string, args []Expression) error {
+		if len(args) != numArgs {
+			return fmt.Errorf("'%v' expects %v args, you provided %v", sig, numArgs, len(args))
+		}
+		return nil
+	}
+}
+
+func ckType(pos int, tag ExpressionType) ckFn {
+	return func(sig string, args []Expression) error {
+		if args[pos].tag != tag {
+			return fmt.Errorf("'%v' expects arg %v to be type '%v', not '%v'",
+				sig, pos+1, ExprTypeName(tag), ExprTypeName(args[pos].tag))
+		}
+		return nil
+	}
+}
+
+func ckMap(pos int) ckFn {
+	return ckType(pos, ExpHashMap)
+}
+
+func ckList(pos int) ckFn {
+	return ckType(pos, ExpList)
+}
+
+func runCheckers(sig string, args []Expression, checks ...ckFn) error {
+	for _, check := range checks {
+		if err := check(sig, args); err != nil {
+			return err
+		}
+	}
+	return nil
 }

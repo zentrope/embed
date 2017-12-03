@@ -156,12 +156,17 @@ a new `initial-value` per `list` item.
 
 > Return all the vals in the hash-map `m` as a list.
 
+(__hget__ m k) → val | nil
 
-(__hget__ hash-map k) → val | nil
+> Return the val found at position `k` in the `hash-map` or `nil` if
+> not found.
 
-> Return the value found at position `k` in the `hash-map` or `nil` if not found.
+(__hget-in__ m '(k ... ks)) → val | nil
 
-(__hset__ hash-map k<sub>1</sub> v<sub>1</sub> ... k<sub>n</sub> v<sub>n</sub>) → hash-map
+> Return the val found at each value of `k` following a path through a
+> map of maps, or `nil` if not found.
+
+(__hset__ m k<sub>1</sub> v<sub>1</sub> ... k<sub>n</sub> v<sub>n</sub>) → hash-map
 
 > Return a new hash-map adding each `k/v` pair to the old `hash-map`.
 

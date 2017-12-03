@@ -60,6 +60,7 @@ func ExprTypeName(v ExpressionType) string {
 		ExpBool:      "bool",
 		ExpQuote:     "quote",
 		ExpFile:      "file",
+		ExpHashMap:   "hash-map",
 	}
 
 	value, ok := names[v]
