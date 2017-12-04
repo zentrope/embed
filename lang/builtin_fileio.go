@@ -22,22 +22,20 @@ import (
 )
 
 var fileioBuiltins = primitivesMap{
-	"close":      _close,
-	"directory?": _directoryP,
-	"exists?":    _existsP,
-	"file?":      _fileP,
-	"read-file":  _readFile,
-	"handle?":    _handleP,
-	"open":       _open,
+	"close":     _close,
+	"dir?":      _dirP,
+	"exists?":   _existsP,
+	"file?":     _fileP,
+	"read-file": _readFile,
+	"handle?":   _handleP,
+	"open":      _open,
 }
 
 func _readFile(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc < 1 {
-		return nilExpr("(read-file file-name) requires 1 arg, you provided %v", argc)
-	}
+	sig := "(read-file fpath)"
+	specs := []spec{ckArity(1), ckString(0)}
 
-	if err := verifyStrings(args); err != nil {
+	if err := typeCheck(sig, args, specs...); err != nil {
 		return NilExpression, err
 	}
 
@@ -51,15 +49,13 @@ func _readFile(args []Expression) (Expression, error) {
 }
 
 func _open(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc != 1 {
-		return nilExpr("(open file-path) requires 1 arg, you provided %v", argc)
+	sig := "(open fpath)"
+	specs := []spec{ckArity(1), ckString(0)}
+
+	if err := typeCheck(sig, args, specs...); err != nil {
+		return NilExpression, err
 	}
 
-	if args[0].tag != ExpString {
-		return nilExpr("(open file-path) expects file-path to be a string, not %v",
-			ExprTypeName(args[0].tag))
-	}
 	path := args[0].string
 	file, err := os.Open(path)
 	if err != nil {
@@ -70,15 +66,11 @@ func _open(args []Expression) (Expression, error) {
 }
 
 func _close(args []Expression) (Expression, error) {
+	sig := "(close fhandle)"
+	specs := []spec{ckArity(1), ckHandle(0)}
 
-	argc := len(args)
-	if argc != 1 {
-		return nilExpr("(close file-handle) requires 1 arg, you provided %v", argc)
-	}
-
-	if args[0].tag != ExpFile {
-		return nilExpr("(close file-handle) expects file-handle to be a file-handle, not %v",
-			ExprTypeName(args[0].tag))
+	if err := typeCheck(sig, args, specs...); err != nil {
+		return NilExpression, err
 	}
 
 	fileData := args[0].file
@@ -90,15 +82,12 @@ func _close(args []Expression) (Expression, error) {
 	return NilExpression, nil
 }
 
-func _directoryP(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc != 1 {
-		return nilExpr("(directory? file-name) requires 1 arg, you provided %v", argc)
-	}
+func _dirP(args []Expression) (Expression, error) {
+	sig := "(dir? fpath)"
+	specs := []spec{ckArity(1), ckString(0)}
 
-	if args[0].tag != ExpString {
-		return nilExpr("(directory? file-name) ← file-name should be string, not %v",
-			ExprTypeName(args[0].tag))
+	if err := typeCheck(sig, args, specs...); err != nil {
+		return NilExpression, err
 	}
 
 	path := args[0].string
@@ -119,14 +108,11 @@ func _directoryP(args []Expression) (Expression, error) {
 }
 
 func _existsP(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc != 1 {
-		return nilExpr("(exists? file-name) requires 1 arg, you provided %v", argc)
-	}
+	sig := "(exists? fpath)"
+	specs := []spec{ckArity(1), ckString(0)}
 
-	if args[0].tag != ExpString {
-		return nilExpr("(exists? file-name) ← file-name should be string, not %v",
-			ExprTypeName(args[0].tag))
+	if err := typeCheck(sig, args, specs...); err != nil {
+		return NilExpression, err
 	}
 
 	path := args[0].string
@@ -138,14 +124,11 @@ func _existsP(args []Expression) (Expression, error) {
 }
 
 func _fileP(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc != 1 {
-		return nilExpr("(file? file-name) requires 1 arg, you provided %v", argc)
-	}
+	sig := "(file? fpath)"
+	specs := []spec{ckArity(1), ckString(0)}
 
-	if args[0].tag != ExpString {
-		return nilExpr("(file? file-name) ← file-name should be string, not %v",
-			ExprTypeName(args[0].tag))
+	if err := typeCheck(sig, args, specs...); err != nil {
+		return NilExpression, err
 	}
 
 	path := args[0].string
@@ -166,15 +149,12 @@ func _fileP(args []Expression) (Expression, error) {
 }
 
 func _handleP(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc != 1 {
-		return nilExpr("(handle? file-handle) requires 1 arg, you provided %v", argc)
+	sig := "(handle? val)"
+	specs := []spec{ckArity(1)}
+
+	if err := typeCheck(sig, args, specs...); err != nil {
+		return NilExpression, err
 	}
 
-	if args[0].tag != ExpFile {
-		return nilExpr("(handle? file-handle) ← file-handle should be 'handle', not '%v'",
-			ExprTypeName(args[0].tag))
-	}
-
-	return TrueExpression, nil
+	return NewExpr(ExpBool, args[0].tag == ExpFile), nil
 }

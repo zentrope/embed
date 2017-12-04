@@ -236,11 +236,11 @@ __sprintf__) according to the [Golang implementation][printf].
 
 > Returns true if the file is a file (not a directory).
 
-(__directory?__ file-name) → bool
+(__dir?__ file-name) → bool
 
 > Returns true if the file is a directory (not a file).
 
-(__directories__ file-name) → list <span style="color:red">_;; not implemented_</span>
+(__dirs__ file-name) → list <span style="color:red">_;; not implemented_</span>
 
 > Return a list of all the files and directories (recursive) starting
 at file-name-or-handle as the root.

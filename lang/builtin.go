@@ -78,7 +78,7 @@ type spec func(string, []Expression) error
 func ckArity(numArgs int) spec {
 	return func(sig string, args []Expression) error {
 		if len(args) != numArgs {
-			return fmt.Errorf("'%v' expects '%v' args, you provided '%v'",
+			return fmt.Errorf("'%v' expects '%v' arg(s), you provided '%v'",
 				sig, numArgs, len(args))
 		}
 		return nil
@@ -88,7 +88,7 @@ func ckArity(numArgs int) spec {
 func ckArityAtLeast(numArgs int) spec {
 	return func(sig string, args []Expression) error {
 		if len(args) <= numArgs {
-			return fmt.Errorf("'%v' expects at least '%v' args, you provided '%v'",
+			return fmt.Errorf("'%v' expects at least '%v' arg(s), you provided '%v'",
 				sig, numArgs, len(args))
 		}
 		return nil
@@ -115,6 +115,10 @@ func ckMap(pos int) spec {
 
 func ckList(pos int) spec {
 	return ckType(pos, ExpList)
+}
+
+func ckHandle(pos int) spec {
+	return ckType(pos, ExpFile)
 }
 
 func typeCheck(sig string, args []Expression, specs ...spec) error {
