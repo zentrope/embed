@@ -41,8 +41,8 @@ const (
 	ExpSymbol
 	ExpBool
 	ExpQuote
-	ExpFile // represents a file-handle
-	ExpHashMap
+	ExpFile    // represents a file-handle
+	ExpHashMap // 12
 )
 
 // ExprTypeName returns the type name of an expression type
@@ -451,6 +451,8 @@ func (e Expression) Value() interface{} {
 		return fmt.Sprintf("lambda<%v|%v %v>", e.functionName, e.functionParams, e.functionBody)
 	case ExpFunction:
 		return fmt.Sprintf("fn<%v %v>", e.functionName, e.functionParams)
+	case ExpHashMap:
+		return e.hashMap
 	default:
 		return fmt.Sprintf("unknown→%#v", e)
 	}

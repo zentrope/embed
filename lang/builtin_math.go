@@ -40,16 +40,15 @@ func toExpr(x float64) Expression {
 	return NewExpr(ExpFloat, x)
 }
 
-func verifyNums(args []Expression) error {
-	for _, arg := range args {
-		switch arg.tag {
-		case ExpInteger, ExpFloat:
-			continue
-		default:
-			return errors.New("all arguments must be numbers")
-		}
+func asNumber(expr Expression) (float64, error) {
+	switch expr.tag {
+	case ExpInteger:
+		return float64(expr.integer), nil
+	case ExpFloat:
+		return expr.float, nil
+	default:
+		return 0, errors.New("not a number")
 	}
-	return nil
 }
 
 func _mult(args []Expression) (Expression, error) {

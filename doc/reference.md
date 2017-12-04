@@ -81,7 +81,6 @@ __&stderr__
 (regardless of whether or not they're the same object in memory).
 
 
-
 ## List functions
 
 (**list** val<sub>1</sub> val<sub>2</sub> ... val<sub>n</sub>) → list
@@ -111,7 +110,7 @@ __&stderr__
 > Returns a list made up of all the values in `list` for which
 (`function` item) returns true.
 
-(**reduce** function initial-value list) → value
+(**reduce** function initial-value list) → val
 > Returns a value calculated by `function` applied to the
 `initial-value` and each item in the `list`, with the `function` returning
 a new `initial-value` per `list` item.
@@ -156,21 +155,26 @@ a new `initial-value` per `list` item.
 
 > Return all the vals in the hash-map `m` as a list.
 
-(__hget__ m k) → val | nil
+(__hget__ m k) → val _or_ nil
 
 > Return the val found at position `k` in the `hash-map` or `nil` if
 > not found.
 
-(__hget-in__ m '(k ... ks)) → val | nil
+(__hget-in__ m '(k<sub>1</sub> ... k<sub>n</sub>)) → val _or_ nil
 
 > Return the val found at each value of `k` following a path through a
 > map of maps, or `nil` if not found.
 
 (__hset__ m k<sub>1</sub> v<sub>1</sub> ... k<sub>n</sub> v<sub>n</sub>) → hash-map
 
-> Return a new hash-map adding each `k/v` pair to the old `hash-map`.
+> Return a new hash-map adding each `k/v` pair to the old
+> `hash-map`. Setting `k` to `nil` deletes the map entry.
 
+(__hset-in__ m '(k<sub>1</sub> ... k<sub>n</sub>) v) → hash-map
 
+> Set value of k<sub>n</sub> to val `v`, creating intermediate paths
+> from k<sub>1</sub> as needed. It's an error if one of the path
+> elements is present and not a hash-map.
 
 ## Print functions
 

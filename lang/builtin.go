@@ -18,6 +18,7 @@ package lang
 
 import (
 	"errors"
+	"fmt"
 )
 
 type primitiveFunc func(args []Expression) (Expression, error)
@@ -42,6 +43,7 @@ func init() {
 	}
 }
 
+// TODO: Move to type checking.
 func verifyStrings(args []Expression) error {
 	for _, arg := range args {
 		switch arg.tag {
@@ -54,13 +56,72 @@ func verifyStrings(args []Expression) error {
 	return nil
 }
 
-func asNumber(expr Expression) (float64, error) {
-	switch expr.tag {
-	case ExpInteger:
-		return float64(expr.integer), nil
-	case ExpFloat:
-		return expr.float, nil
-	default:
-		return 0, errors.New("not a number")
+// TODO: Move to type checking.
+func verifyNums(args []Expression) error {
+	for _, arg := range args {
+		switch arg.tag {
+		case ExpInteger, ExpFloat:
+			continue
+		default:
+			return errors.New("all arguments must be numbers")
+		}
 	}
+	return nil
+}
+
+//-----------------------------------------------------------------------------
+// Type checking
+//-----------------------------------------------------------------------------
+
+type spec func(string, []Expression) error
+
+func ckArity(numArgs int) spec {
+	return func(sig string, args []Expression) error {
+		if len(args) != numArgs {
+			return fmt.Errorf("'%v' expects '%v' args, you provided '%v'",
+				sig, numArgs, len(args))
+		}
+		return nil
+	}
+}
+
+func ckArityAtLeast(numArgs int) spec {
+	return func(sig string, args []Expression) error {
+		if len(args) <= numArgs {
+			return fmt.Errorf("'%v' expects at least '%v' args, you provided '%v'",
+				sig, numArgs, len(args))
+		}
+		return nil
+	}
+}
+
+func ckType(pos int, tag ExpressionType) spec {
+	return func(sig string, args []Expression) error {
+		if args[pos].tag != tag {
+			return fmt.Errorf("'%v' expects arg %v to be type '%v', not '%v'",
+				sig, pos+1, ExprTypeName(tag), ExprTypeName(args[pos].tag))
+		}
+		return nil
+	}
+}
+
+func ckString(pos int) spec {
+	return ckType(pos, ExpString)
+}
+
+func ckMap(pos int) spec {
+	return ckType(pos, ExpHashMap)
+}
+
+func ckList(pos int) spec {
+	return ckType(pos, ExpList)
+}
+
+func typeCheck(sig string, args []Expression, specs ...spec) error {
+	for _, spec := range specs {
+		if err := spec(sig, args); err != nil {
+			return err
+		}
+	}
+	return nil
 }

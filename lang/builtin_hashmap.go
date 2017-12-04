@@ -18,6 +18,7 @@ package lang
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 )
 
@@ -29,6 +30,7 @@ var hashmapBuiltins = primitivesMap{
 	"hkeys":   _hkeys,
 	"hvals":   _hvals,
 	"hget-in": _hgetin,
+	"hset-in": _hsetin,
 }
 
 // HakiHashMap represents a hash-map type in the Haki language.
@@ -45,6 +47,11 @@ func newHakiMap() *HakiHashMap {
 }
 
 func (hmap *HakiHashMap) set(key, value Expression) {
+	if value.Equals(NilExpression) {
+		delete(hmap.keys, key.hash)
+		delete(hmap.vals, key.hash)
+		return
+	}
 	hmap.keys[key.hash] = key
 	hmap.vals[key.hash] = value
 }
@@ -52,7 +59,11 @@ func (hmap *HakiHashMap) set(key, value Expression) {
 func (hmap *HakiHashMap) copy() *HakiHashMap {
 	newMap := newHakiMap()
 	for lookup := range hmap.keys {
-		newMap.set(hmap.keys[lookup], hmap.vals[lookup])
+		val := hmap.vals[lookup]
+		if val.tag == ExpHashMap {
+			val = NewHashMapExpr(val.hashMap.copy())
+		}
+		newMap.set(hmap.keys[lookup], val)
 	}
 	return newMap
 }
@@ -71,8 +82,15 @@ func NewHashMapExpr(hmap *HakiHashMap) Expression {
 	data := make([]interface{}, 0)
 	data = append(data, ExpHashMap)
 
-	for _, val := range hmap.vals {
-		data = append(data, val.hash)
+	keys := make([]int, 0)
+	for k := range hmap.keys {
+		keys = append(keys, int(k))
+	}
+
+	sort.Ints(keys)
+
+	for sortedKey := range keys {
+		data = append(data, hmap.vals[uint32(sortedKey)])
 	}
 
 	return Expression{
@@ -158,14 +176,10 @@ func _hvals(args []Expression) (Expression, error) {
 
 func _hget(args []Expression) (Expression, error) {
 	sig := "(hget m k)"
-	argc := len(args)
-	if argc < 2 {
-		return nilExpr("%v expects at least 2 args, you provided %v", sig, argc)
-	}
 
-	if args[0].tag != ExpHashMap {
-		return nilExpr("%v expects 'm' to be a 'hash-map', not '%v'", sig,
-			ExprTypeName(args[0].tag))
+	specs := []spec{ckArity(2), ckMap(0)}
+	if err := typeCheck(sig, args, specs...); err != nil {
+		return NilExpression, err
 	}
 
 	h := args[0].hashMap
@@ -207,9 +221,10 @@ func _hset(args []Expression) (Expression, error) {
 }
 
 func _hgetin(args []Expression) (Expression, error) {
-	sig := "(hget-in m [k & ks])"
+	sig := "(hget-in m (k ... ks))"
+	specs := []spec{ckArity(2), ckMap(0), ckList(1)}
 
-	if err := runCheckers(sig, args, ckArity(2), ckMap(0), ckList(1)); err != nil {
+	if err := typeCheck(sig, args, specs...); err != nil {
 		return NilExpression, err
 	}
 
@@ -218,51 +233,63 @@ func _hgetin(args []Expression) (Expression, error) {
 	for _, k := range args[1].list {
 		if m.tag == ExpHashMap {
 			m = m.hashMap.vals[k.hash]
-		} else {
-			return NilExpression, nil
+			continue
 		}
+		return NilExpression, nil
 	}
 	return m, nil
 }
 
-//-----------------------------------------------------------------------------
-// Type checking (used in here as a test case)
-//-----------------------------------------------------------------------------
+func _hsetin(args []Expression) (Expression, error) {
 
-type ckFn func(string, []Expression) error
+	sig := "(hset-in m (k ... ks) v)"
+	specs := []spec{ckArity(3), ckMap(0), ckList(1)}
 
-func ckArity(numArgs int) ckFn {
-	return func(sig string, args []Expression) error {
-		if len(args) != numArgs {
-			return fmt.Errorf("'%v' expects %v args, you provided %v", sig, numArgs, len(args))
-		}
-		return nil
+	if err := typeCheck(sig, args, specs...); err != nil {
+		return NilExpression, err
 	}
-}
 
-func ckType(pos int, tag ExpressionType) ckFn {
-	return func(sig string, args []Expression) error {
-		if args[pos].tag != tag {
-			return fmt.Errorf("'%v' expects arg %v to be type '%v', not '%v'",
-				sig, pos+1, ExprTypeName(tag), ExprTypeName(args[pos].tag))
+	pathKeys := args[1].list
+	lastKey := pathKeys[len(pathKeys)-1]
+	newVal := args[2]
+
+	original := args[0]
+	newMap := original.hashMap.copy()
+	curMap := newMap
+
+	for _, k := range pathKeys {
+		place := curMap.vals[k.hash]
+
+		if k.Equals(lastKey) {
+			curMap.set(k, newVal)
+			break
 		}
-		return nil
-	}
-}
 
-func ckMap(pos int) ckFn {
-	return ckType(pos, ExpHashMap)
-}
-
-func ckList(pos int) ckFn {
-	return ckType(pos, ExpList)
-}
-
-func runCheckers(sig string, args []Expression, checks ...ckFn) error {
-	for _, check := range checks {
-		if err := check(sig, args); err != nil {
-			return err
+		if place.tag == ExpHashMap && k.Equals(lastKey) {
+			place.hashMap.set(k, newVal)
+			break
 		}
+
+		if place.tag == ExpHashMap {
+			curMap = place.hashMap
+			continue
+		}
+
+		if place.Equals(NilExpression) && k.Equals(lastKey) {
+			curMap.set(k, newVal)
+			continue
+		}
+
+		if place.Equals(NilExpression) {
+			subMap := newHakiMap()
+			curMap.set(k, NewHashMapExpr(subMap))
+			curMap = subMap
+			continue
+		}
+
+		return NilExpression,
+			fmt.Errorf("'%v' key reached non-hashmap value of type '%v'", k, ExprTypeName(place.tag))
 	}
-	return nil
+
+	return NewHashMapExpr(newMap), nil
 }

@@ -30,13 +30,11 @@ var stringBuiltins = primitivesMap{
 }
 
 func _format(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc < 1 {
-		return nilExpr("(format pattern ...args) requires at least the first argument.")
-	}
+	sig := "(format pattern v ... vs)"
+	specs := []spec{ckArityAtLeast(1), ckString(0)}
 
-	if args[0].tag != ExpString {
-		return nilExpr("(format pattern ...args) the pattern argument must be a string.")
+	if err := typeCheck(sig, args, specs...); err != nil {
+		return NilExpression, err
 	}
 
 	pattern := args[0].string
