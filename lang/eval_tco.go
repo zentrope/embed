@@ -209,17 +209,11 @@ func (x TcoInterpreter) evalLambda(env *Environment, params, body Expression) (E
 	return f, nil
 }
 
-func print(pattern string, args ...interface{}) {
-	// fmt.Printf(pattern, args...)
-	// fmt.Println()
-}
-
 // Evaluate is a TCO version of the evaluator. I think.
 func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression, error) {
 	var err error
 
 	for {
-		print("{:expr %v :type %v}", expr, expr.Type())
 		switch expr.tag {
 
 		case ExpNil:
@@ -230,13 +224,10 @@ func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression,
 			if !found {
 				return nilExpr("value not found for '%v'", expr.String())
 			}
-			print("lookup: {:expr `%v` :value `%v` :type `%v`}", expr, value, value.Type())
 			if value.IsLambda() && len(value.functionParams.list) == 0 {
 				// A thunk which should be evaluated in current environment
-				print("THUNK: %v %v", expr, value)
 				expr = *value.functionBody
 			} else {
-				// print("lookup: {:expr `%v` :value `%v` :type `%v`}", expr, value, value.Type())
 				return value, nil
 			}
 
@@ -244,7 +235,6 @@ func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression,
 			return *expr.quote, nil
 
 		case ExpInteger, ExpString, ExpFloat, ExpBool:
-			print(" return scalar: `%v`", expr)
 			return expr, nil
 
 		case ExpList:
@@ -292,8 +282,6 @@ func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression,
 				return x.evalLambda(env, params, body)
 
 			default: // apply
-				print("Evalusing %v for function", first)
-
 				fn, err := x.Evaluate(env, first)
 				if err != nil {
 					return NilExpression, err
@@ -302,39 +290,28 @@ func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression,
 				if !fn.IsInvokable() {
 					println("Not invokable.")
 				}
-
-				print("Evaluating function '%v' args '%v'", first, rest)
 				argv, err := x.evalList(env, rest.list)
 				if err != nil {
 					return NilExpression, err
 				}
 
-				print("apply: {:fn `%v` :type %v :argv %v}", fn, fn.Type(), argv)
-
-				print("is primitive?")
 				if fn.IsPrimitive() {
 					ret, err := fn.InvokePrimitive(argv)
-					print(" return: %v (%v)", ret, err)
 					return ret, err
-					// return fn.InvokePrimitive(argv)
 				}
 
-				print("is arity?")
 				ok, err := isValidArity(fn, rest.list)
 				if !ok {
 					return NilExpression, err
 				}
 
 				if fn.IsLambda() {
-					print(" fn is lambda")
 					env = fn.functionEnv.ExtendEnvironment(*fn.functionParams, argv)
 					expr = *fn.functionBody
 				} else if fn.IsFunction() {
-					print(" fn is function")
 					env = env.ExtendEnvironment(*fn.functionParams, argv)
 					expr = *fn.functionBody
 				} else {
-					print(" fn is not invokable")
 					return nilExpr("unable to apply %v", fn)
 				}
 			}
