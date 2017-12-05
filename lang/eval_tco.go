@@ -50,6 +50,7 @@ func isValidArity(fn Expression, args []Expression) (bool, error) {
 }
 
 func (x TcoInterpreter) evalIf(env *Environment, exprs Expression) (Expression, error) {
+
 	argc := len(exprs.list)
 	if argc < 2 {
 		return NilExpression, fmt.Errorf("too few arguments (%v) to if", argc)
@@ -66,7 +67,8 @@ func (x TcoInterpreter) evalIf(env *Environment, exprs Expression) (Expression, 
 	if test.IsTruthy() {
 		return exprs.list[1], nil
 	}
-	if argc >= 2 {
+
+	if argc >= 3 {
 		return exprs.list[2], nil
 	}
 
@@ -219,6 +221,9 @@ func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression,
 	for {
 		print("{:expr %v :type %v}", expr, expr.Type())
 		switch expr.tag {
+
+		case ExpNil:
+			return expr, nil
 
 		case ExpSymbol:
 			found, value := env.Lookup(expr.symbol)
