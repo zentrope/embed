@@ -16,8 +16,16 @@
 
 package lang
 
+import "regexp"
+
+var respace = regexp.MustCompile("\t")
+
+func spacify(s string) string {
+	return respace.ReplaceAllString(s, "  ")
+}
+
 // Core functions
-const Core = `
+var Core = spacify(`
 (defun map (f xs)
 	(if (= xs '())
 		'()
@@ -80,9 +88,9 @@ const Core = `
 
 (defun loop-index (f lst)
 	(let (_loop (fn (index f lst)
-									 (if (= lst '())
-										 nil
-										 (do (f index (head lst))
-												 (_loop (inc index) f (tail lst))))))
+										(if (= lst '())
+											nil
+											(do (f index (head lst))
+													(_loop (inc index) f (tail lst))))))
 		(_loop 0 f lst)))
-`
+`)
