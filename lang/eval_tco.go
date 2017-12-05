@@ -226,6 +226,8 @@ func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression,
 			}
 			if value.IsLambda() && len(value.functionParams.list) == 0 {
 				// A thunk which should be evaluated in current environment
+				// Once it's evaluated, use the value, not the function body
+				// Need a new ExprType to handle this case.
 				expr = *value.functionBody
 			} else {
 				return value, nil
