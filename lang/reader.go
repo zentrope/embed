@@ -62,7 +62,7 @@ func (reader *Reader) IsBalanced() bool {
 
 // Append appends new data to the reader.
 func (reader *Reader) Append(line string) {
-	reader.buffer = append(reader.buffer, []rune(line)...)
+	reader.buffer = append(reader.buffer, []rune(stripComments(line))...)
 }
 
 // ErrEOF means there's nothing left to read
@@ -121,4 +121,37 @@ func (reader *Reader) GetNextForm() (string, error) {
 		return string(form), errors.New("incomplete form (missing parens)")
 	}
 	return strings.TrimSpace(string(form)), nil
+}
+
+func stripComments(forms string) string {
+	fixed := make([]string, 0)
+	lines := strings.Split(forms, "\n")
+
+	inString := false
+
+	for _, l := range lines {
+
+		resolved := false
+
+		for pos, c := range l {
+			if c == '"' {
+				inString = !inString
+				continue
+			}
+
+			if c == ';' && !inString {
+				if pos != 0 {
+					fixed = append(fixed, l[:pos])
+				}
+				resolved = true
+				break
+			}
+		}
+
+		if !resolved {
+			fixed = append(fixed, l)
+		}
+	}
+
+	return strings.Join(fixed, "\n")
 }
