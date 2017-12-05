@@ -19,6 +19,7 @@ package lang
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 var stringBuiltins = primitivesMap{
@@ -27,6 +28,38 @@ var stringBuiltins = primitivesMap{
 	"re-list":  _reList,
 	"re-match": _reMatch,
 	"re-split": _reSplit,
+	"trim":     _trim,
+	"triml":    _triml,
+	"trimr":    _trimr,
+}
+
+var _trimCutSet = " \n\t\r"
+
+func _trim(args []Expression) (Expression, error) {
+
+	if err := typeCheck("(trim string)", args, ckArity(1), ckString(0)); err != nil {
+		return NilExpression, err
+	}
+
+	return NewStringExpr(strings.TrimSpace(args[0].string)), nil
+}
+
+func _triml(args []Expression) (Expression, error) {
+
+	if err := typeCheck("(triml string)", args, ckArity(1), ckString(0)); err != nil {
+		return NilExpression, err
+	}
+
+	return NewStringExpr(strings.TrimLeft(args[0].string, _trimCutSet)), nil
+}
+
+func _trimr(args []Expression) (Expression, error) {
+
+	if err := typeCheck("(trimr string)", args, ckArity(1), ckString(0)); err != nil {
+		return NilExpression, err
+	}
+
+	return NewStringExpr(strings.TrimRight(args[0].string, _trimCutSet)), nil
 }
 
 func _format(args []Expression) (Expression, error) {

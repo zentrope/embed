@@ -124,6 +124,16 @@ func WithLambda(env *Environment, body Expression) Expression {
 	return result
 }
 
+// NewStringExpr returns an expression representing a string
+func NewStringExpr(s string) Expression {
+	return NewExpr(ExpString, s)
+}
+
+// NewBoolExpr returns an expression representing a boolean value
+func NewBoolExpr(b bool) Expression {
+	return NewExpr(ExpBool, b)
+}
+
 // NewFunctionExpr returns an expression representing a function
 func NewFunctionExpr(name Expression, params Expression, body Expression) Expression {
 	p := params

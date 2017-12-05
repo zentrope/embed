@@ -205,6 +205,17 @@ __sprintf__) according to the [Golang implementation][printf].
 
 > Returns a list of strings split based on the `regex` applied to `string`.
 
+(__trim__ string) → string
+
+> Trim spaces from both ends of a string, returning a new string.
+
+(__triml__ string) → string
+
+> Trim spaces from beginning of a string, returning a new string.
+
+(__trimr__ string) → string
+
+> Trim spaces from the end of a string, returning a new string.
 
 [printf]: https://golang.org/pkg/fmt/
 
