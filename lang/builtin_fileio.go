@@ -17,18 +17,88 @@
 package lang
 
 import (
+	"bufio"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 )
+
+// Used as the payload for file-handle expressions.
+type fileData struct {
+	file    *os.File
+	isOpen  bool
+	path    string
+	scanner *bufio.Scanner
+}
 
 var fileioBuiltins = primitivesMap{
 	"close":     _close,
+	"closed?":   _closedP,
 	"dir?":      _dirP,
 	"exists?":   _existsP,
 	"file?":     _fileP,
-	"read-file": _readFile,
 	"handle?":   _handleP,
 	"open":      _open,
+	"read-file": _readFile,
+	"read-line": _readLine,
+}
+
+// NewFileHandleExpr returns a new file-handle expression.
+func NewFileHandleExpr(file *os.File) Expression {
+	data := make([]interface{}, 0)
+	data = append(data, ExpFile)
+	data = append(data, file.Name())
+
+	path, err := filepath.Abs(file.Name())
+	if err != nil {
+		path = file.Name()
+	}
+
+	fileData := &fileData{
+		file:    file,
+		isOpen:  true,
+		path:    path,
+		scanner: bufio.NewScanner(file),
+	}
+
+	return Expression{tag: ExpFile, hash: hashIt(data...), file: fileData}
+}
+
+//-----------------------------------------------------------------------------
+// Implementation
+//-----------------------------------------------------------------------------
+
+func _readLine(args []Expression) (Expression, error) {
+
+	if err := typeCheck("(read-line fhandle)", args, ckArity(1), ckHandle(0)); err != nil {
+		return NilExpression, err
+	}
+
+	fileData := args[0].file
+
+	if !fileData.isOpen || fileData.scanner == nil {
+		return NilExpression,
+			fmt.Errorf("Cannot read from un-opened file: '%v'",
+				fileData.path)
+	}
+
+	moreToScan := fileData.scanner.Scan()
+
+	if !moreToScan {
+		err := fileData.scanner.Err()
+		if err == nil {
+			fileData.file.Close()
+			fileData.isOpen = false
+			fileData.scanner = nil
+			return NilExpression, nil
+		}
+
+		return NilExpression, err
+	}
+
+	line := fileData.scanner.Text()
+	return NewStringExpr(line), nil
 }
 
 func _readFile(args []Expression) (Expression, error) {
@@ -62,7 +132,18 @@ func _open(args []Expression) (Expression, error) {
 		return NilExpression, err
 	}
 
-	return NewExpr(ExpFile, file), nil
+	return NewFileHandleExpr(file), nil
+}
+
+func safeClose(f *os.File) error {
+	if err := f.Close(); err != nil {
+		if pe, ok := err.(*os.PathError); !ok {
+			return err
+		} else if pe.Err != os.ErrClosed {
+			return err
+		}
+	}
+	return nil
 }
 
 func _close(args []Expression) (Expression, error) {
@@ -75,11 +156,24 @@ func _close(args []Expression) (Expression, error) {
 
 	fileData := args[0].file
 	fileData.isOpen = false
-	if err := fileData.file.Close(); err != nil {
+	fileData.scanner = nil
+	if err := safeClose(fileData.file); err != nil {
+		return NilExpression, err
+	}
+	return NilExpression, nil
+}
+
+func _closedP(args []Expression) (Expression, error) {
+	sig := "(closed? fhandle)"
+	specs := []spec{ckArity(1), ckHandle(0)}
+
+	if err := typeCheck(sig, args, specs...); err != nil {
 		return NilExpression, err
 	}
 
-	return NilExpression, nil
+	fileData := args[0].file
+
+	return NewBoolExpr(!fileData.isOpen), nil
 }
 
 func _dirP(args []Expression) (Expression, error) {

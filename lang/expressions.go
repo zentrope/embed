@@ -21,7 +21,6 @@ import (
 	"hash/fnv"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -73,12 +72,6 @@ func ExprTypeName(v ExpressionType) string {
 // Type returns the type name of an expression
 func (e Expression) Type() string {
 	return ExprTypeName(e.tag)
-}
-
-type fileData struct {
-	file   *os.File
-	isOpen bool
-	path   string
 }
 
 // Expression represents a computation
@@ -163,8 +156,13 @@ func NewLambdaExpr(env *Environment, name, params, body Expression) Expression {
 // NewExpr constructs a new expression of the given type
 func NewExpr(tag ExpressionType, value interface{}) Expression {
 
-	if tag == ExpHashMap {
+	switch tag {
+
+	case ExpHashMap:
 		return NewHashMapExpr(value.(*HakiHashMap))
+
+	case ExpFile:
+		return NewFileHandleExpr(value.(*os.File))
 	}
 
 	data := make([]interface{}, 0)
@@ -197,17 +195,6 @@ func NewExpr(tag ExpressionType, value interface{}) Expression {
 	case ExpQuote:
 		exp := value.(Expression)
 		e.quote = &exp
-	case ExpFile:
-		file := value.(*os.File)
-		path, err := filepath.Abs(file.Name())
-		if err != nil {
-			path = file.Name()
-		}
-		e.file = &fileData{
-			file:   file,
-			isOpen: true,
-			path:   path,
-		}
 	default:
 		log.Fatalf("unable to create new expr of type %v", ExprTypeName(tag))
 	}

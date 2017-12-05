@@ -224,6 +224,10 @@ __sprintf__) according to the [Golang implementation][printf].
 
 > Close an open file handle.
 
+(__closed?__ file-handle) → bool
+
+> Return true if the `file-handle` is closed.
+
 (__handle?__ file-handle) → bool
 
 > Return true if `file-handle` is a file-handle returned by open.
@@ -245,6 +249,6 @@ __sprintf__) according to the [Golang implementation][printf].
 > Return a list of all the files and directories (recursive) starting
 at file-name-or-handle as the root.
 
-(__read-line__ file-handle) → string | nil <span style="color:red">_;; not implemented_</span>
+(__read-line__ file-handle) → string \ nil
 
 > Read a line from a `file-handle`. A `nil` signifies an end-of-file condition.
