@@ -16,7 +16,9 @@
 
 package lang
 
-import "errors"
+import (
+	"errors"
+)
 
 var listBuiltins = map[string]primitiveFunc{
 	"append":  _append,
@@ -28,6 +30,23 @@ var listBuiltins = map[string]primitiveFunc{
 	"prepend": _prepend,
 	"tail":    _tail,
 }
+
+// NewListExpr constructs a new list
+func NewListExpr(list []Expression) Expression {
+
+	data := make([]interface{}, 0)
+	data = append(data, ExpList)
+
+	for _, e := range list {
+		data = append(data, e.hash)
+	}
+
+	return Expression{tag: ExpList, hash: hashIt(data...), list: list}
+}
+
+//-----------------------------------------------------------------------------
+// IMPLEMENTATION
+//-----------------------------------------------------------------------------
 
 func _count(args []Expression) (Expression, error) {
 	argc := len(args)

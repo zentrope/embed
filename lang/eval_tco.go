@@ -49,8 +49,11 @@ func isValidArity(fn Expression, args []Expression) (bool, error) {
 		fn.functionName, paramc, argc)
 }
 
-func (x TcoInterpreter) evalIf(env *Environment, exprs Expression) (Expression, error) {
+//-----------------------------------------------------------------------------
+// IF
+//-----------------------------------------------------------------------------
 
+func (x TcoInterpreter) evalIf(env *Environment, exprs Expression) (Expression, error) {
 	argc := len(exprs.list)
 	if argc < 2 {
 		return NilExpression, fmt.Errorf("too few arguments (%v) to if", argc)
@@ -75,6 +78,10 @@ func (x TcoInterpreter) evalIf(env *Environment, exprs Expression) (Expression, 
 	return NilExpression, nil
 }
 
+//-----------------------------------------------------------------------------
+// LET
+//-----------------------------------------------------------------------------
+
 func (x TcoInterpreter) evalLet(env *Environment, clauses, body Expression) (*Environment, Expression, error) {
 
 	if !clauses.IsList() {
@@ -91,30 +98,25 @@ func (x TcoInterpreter) evalLet(env *Environment, clauses, body Expression) (*En
 		return env, body, nil
 	}
 
-	params := make([]Expression, 0)
-	lambdas := make([]Expression, 0)
-	for i := 0; i < clauses.Size(); i += 2 {
-		params = append(params, clauses.list[i])
-		lambdas = append(lambdas, WithLambda(env, clauses.list[i+1]))
-	}
-
-	envPass2 := env.ExtendEnvironment(NewExpr(ExpList, params), lambdas)
-
-	vs2 := make([]Expression, 0)
+	bindingNames := make([]Expression, 0)
+	bindingVals := make([]Expression, 0)
 
 	for i := 0; i < clauses.Size(); i += 2 {
-		f := NewLambdaExpr(envPass2, GenSym("fn"), NewExpr(ExpList, []Expression{}), clauses.list[i+1])
-		vs2 = append(vs2, f)
+		name := clauses.list[i]
+		val := clauses.list[i+1]
+		bindingNames = append(bindingNames, name)
+		bindingVals = append(bindingVals, NewThunkExpr(val))
 	}
 
-	envPass2 = env.ExtendEnvironment(NewExpr(ExpList, params), vs2)
+	newEnv := env.ExtendEnvironment(NewListExpr(bindingNames), bindingVals)
 
-	for i := 0; i < len(vs2); i++ {
-		vs2[i].functionEnv = envPass2
-	}
 	doBlock := WrapImplicitDo(body.list)
-	return envPass2, doBlock, nil
+	return newEnv, doBlock, nil
 }
+
+//-----------------------------------------------------------------------------
+// AND
+//-----------------------------------------------------------------------------
 
 func (x TcoInterpreter) evalAnd(env *Environment, exprs Expression) (Expression, error) {
 
@@ -135,6 +137,10 @@ func (x TcoInterpreter) evalAnd(env *Environment, exprs Expression) (Expression,
 	return result, nil
 }
 
+//-----------------------------------------------------------------------------
+// OR
+//-----------------------------------------------------------------------------
+
 func (x TcoInterpreter) evalOr(env *Environment, exprs Expression) (Expression, error) {
 
 	var result Expression
@@ -152,6 +158,10 @@ func (x TcoInterpreter) evalOr(env *Environment, exprs Expression) (Expression, 
 	}
 	return result, nil
 }
+
+//-----------------------------------------------------------------------------
+// DO
+//-----------------------------------------------------------------------------
 
 func (x TcoInterpreter) evalDo(env *Environment, exprs Expression) (Expression, error) {
 
@@ -209,7 +219,11 @@ func (x TcoInterpreter) evalLambda(env *Environment, params, body Expression) (E
 	return f, nil
 }
 
-// Evaluate is a TCO version of the evaluator. I think.
+//-----------------------------------------------------------------------------
+// EVAL
+//-----------------------------------------------------------------------------
+
+// Evaluate an expression in an environment, returning an expression.
 func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression, error) {
 	var err error
 
@@ -224,14 +238,16 @@ func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression,
 			if !found {
 				return nilExpr("value not found for '%v'", expr.String())
 			}
-			if value.IsLambda() && len(value.functionParams.list) == 0 {
-				// A thunk which should be evaluated in current environment
-				// Once it's evaluated, use the value, not the function body
-				// Need a new ExprType to handle this case.
-				expr = *value.functionBody
-			} else {
-				return value, nil
+
+			if value.IsThunk() {
+				boundValue, err := x.Evaluate(env, *value.functionBody)
+				if err != nil {
+					return NilExpression, err
+				}
+				env.Replace(expr, boundValue)
+				return boundValue, nil
 			}
+			return value, nil
 
 		case ExpQuote:
 			return *expr.quote, nil

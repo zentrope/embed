@@ -16,31 +16,23 @@
 
 package lang
 
-import "fmt"
-
 var logicBuiltins = primitivesMap{
 	"=":   _equals,
 	"not": _not,
 }
 
 func _not(args []Expression) (Expression, error) {
-	sig := "(not val)"
-	argc := len(args)
-
-	if argc > 1 {
-		return nilExpr("%v takes one arg, you provided %v", sig, argc)
+	if err := typeCheck("(not v)", args, ckArity(1)); err != nil {
+		return NilExpression, err
 	}
 
 	return NewExpr(ExpBool, !args[0].IsTruthy()), nil
 }
 
 func _equals(args []Expression) (Expression, error) {
-	sig := "(= v1 ... vn)"
-	argc := len(args)
 
-	if argc < 1 {
-		return FalseExpression,
-			fmt.Errorf("%v takes 1 or more args, you provided 0", sig)
+	if err := typeCheck("(= v1 ... vn)", args, ckArityAtLeast(1)); err != nil {
+		return NilExpression, err
 	}
 
 	sentinel := args[0]

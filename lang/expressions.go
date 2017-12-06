@@ -42,6 +42,7 @@ const (
 	ExpQuote
 	ExpFile    // represents a file-handle
 	ExpHashMap // 12
+	ExpThunk   // 13
 )
 
 // ExprTypeName returns the type name of an expression type
@@ -60,6 +61,7 @@ func ExprTypeName(v ExpressionType) string {
 		ExpQuote:     "quote",
 		ExpFile:      "file",
 		ExpHashMap:   "hash-map",
+		ExpThunk:     "thunk",
 	}
 
 	value, ok := names[v]
@@ -92,6 +94,7 @@ type Expression struct {
 	functionEnv    *Environment
 	file           *fileData
 	hashMap        *HakiHashMap
+	thunkValue     *Expression
 }
 
 func hashIt(values ...interface{}) uint32 {
@@ -163,10 +166,27 @@ func NewLambdaExpr(env *Environment, name, params, body Expression) Expression {
 	}
 }
 
+// NewThunkExpr returns a thunk expression, a non-closed over lambda for let bindings.
+func NewThunkExpr(body Expression) Expression {
+	n := GenSym("t")
+	b := body
+	return Expression{
+		tag:          ExpThunk,
+		hash:         hashIt(ExpThunk, n.hash, b.hash),
+		functionName: n.symbol,
+		functionBody: &b,
+		thunkValue:   nil,
+	}
+}
+
 // NewExpr constructs a new expression of the given type
 func NewExpr(tag ExpressionType, value interface{}) Expression {
 
+	// The complicated types are handled elsewhere.
 	switch tag {
+
+	case ExpList:
+		return NewListExpr(value.([]Expression))
 
 	case ExpHashMap:
 		return NewHashMapExpr(value.(*HakiHashMap))
@@ -175,18 +195,9 @@ func NewExpr(tag ExpressionType, value interface{}) Expression {
 		return NewFileHandleExpr(value.(*os.File))
 	}
 
-	data := make([]interface{}, 0)
-	data = append(data, tag)
+	// Simple types here.
 
-	if tag == ExpList {
-		for _, e := range value.([]Expression) {
-			data = append(data, e.hash)
-		}
-	} else {
-		data = append(data, value)
-	}
-
-	e := Expression{tag: tag, hash: hashIt(data...)}
+	e := Expression{tag: tag, hash: hashIt(tag, value)}
 	switch tag {
 	case ExpPrimitive:
 		e.primitive = value.(primitiveFunc)
@@ -215,19 +226,19 @@ func NewExpr(tag ExpressionType, value interface{}) Expression {
 var NilExpression = Expression{tag: ExpNil}
 
 // TrueExpression for a boolean true
-var TrueExpression = NewExpr(ExpBool, true)
+var TrueExpression = NewBoolExpr(true)
 
 // FalseExpression for a boolean false
-var FalseExpression = NewExpr(ExpBool, false)
+var FalseExpression = NewBoolExpr(false)
 
 // StdinExpression represents the STDIN file handle
-var StdinExpression = NewExpr(ExpFile, os.Stdin)
+var StdinExpression = NewFileHandleExpr(os.Stdin)
 
 // StdoutExpression represents the STDOUT file handle
-var StdoutExpression = NewExpr(ExpFile, os.Stdout)
+var StdoutExpression = NewFileHandleExpr(os.Stdout)
 
 // StderrExpression represents the STDERR file handle
-var StderrExpression = NewExpr(ExpFile, os.Stderr)
+var StderrExpression = NewFileHandleExpr(os.Stderr)
 
 // StartsWith returns true if first elem in list is named prefix.
 func (e Expression) StartsWith(prefix string) bool {
@@ -291,6 +302,8 @@ func (e Expression) String() string {
 		return fmt.Sprintf("lambda<%v|%v %v>", e.functionName, e.functionParams, e.functionBody)
 	case ExpFunction:
 		return fmt.Sprintf("fn<%v %v>", e.functionName, e.functionParams)
+	case ExpThunk:
+		return fmt.Sprintf("thunk<%v %v>", e.functionName, e.functionBody)
 	case ExpFile:
 		status := " (closed)"
 		if e.file.isOpen {
@@ -305,34 +318,34 @@ func (e Expression) String() string {
 }
 
 // DebugString provides type information for expressions
-func (e Expression) DebugString() string {
-	switch e.tag {
-	case ExpPrimitive:
-		return fmt.Sprintf("builtin::%v", e.primitive)
-	case ExpList:
-		elems := make([]string, 0)
-		for _, e := range e.list {
-			elems = append(elems, e.DebugString())
-		}
-		return fmt.Sprintf("(%v)", strings.Join(elems, " "))
-	case ExpString:
-		return "str→" + string(e.string)
-	case ExpInteger:
-		return fmt.Sprintf("int→%d", e.integer)
-	case ExpFloat:
-		return fmt.Sprintf("float→%f", e.float)
-	case ExpSymbol:
-		return "sym→" + string(e.symbol)
-	case ExpBool:
-		return fmt.Sprintf("bool→%v", e.bool)
-	case ExpQuote:
-		return "(quote " + e.quote.DebugString() + ")"
-	case ExpNil:
-		return "nil"
-	default:
-		return fmt.Sprintf("unknown→%#v", e)
-	}
-}
+// func (e Expression) DebugString() string {
+//	switch e.tag {
+//	case ExpPrimitive:
+//		return fmt.Sprintf("builtin::%v", e.primitive)
+//	case ExpList:
+//		elems := make([]string, 0)
+//		for _, e := range e.list {
+//			elems = append(elems, e.DebugString())
+//		}
+//		return fmt.Sprintf("(%v)", strings.Join(elems, " "))
+//	case ExpString:
+//		return "str→" + string(e.string)
+//	case ExpInteger:
+//		return fmt.Sprintf("int→%d", e.integer)
+//	case ExpFloat:
+//		return fmt.Sprintf("float→%f", e.float)
+//	case ExpSymbol:
+//		return "sym→" + string(e.symbol)
+//	case ExpBool:
+//		return fmt.Sprintf("bool→%v", e.bool)
+//	case ExpQuote:
+//		return "(quote " + e.quote.DebugString() + ")"
+//	case ExpNil:
+//		return "nil"
+//	default:
+//		return fmt.Sprintf("unknown→%#v", e)
+//	}
+//}
 
 // IsSymbol returns true if expression is a symbol
 func (e Expression) IsSymbol() bool {
@@ -377,6 +390,11 @@ func (e Expression) IsFunction() bool {
 // function value
 func (e Expression) IsLambda() bool {
 	return e.tag == ExpLambda
+}
+
+// IsThunk is true of expression is a thunk
+func (e Expression) IsThunk() bool {
+	return e.tag == ExpThunk
 }
 
 // IsQuote returns true if expr is a quote

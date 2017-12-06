@@ -108,6 +108,17 @@ func (frame frameType) lookup(key string) (Expression, bool) {
 	return value, true
 }
 
+// Replace sets an env binding in the current frame
+func (env *Environment) Replace(key, value Expression) {
+	if len(env.frames) == 0 {
+		env.Set(key, value)
+		return
+	}
+
+	lastFrame := env.frames[len(env.frames)-1]
+	lastFrame[key.symbol] = value
+}
+
 func copyFrame(frame frameType) frameType {
 	newFrame := make(frameType, 0)
 	for k, v := range frame {
