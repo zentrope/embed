@@ -292,11 +292,11 @@ __sprintf__) according to the [Golang implementation][printf].
 
 > Return the contents of the named file as a string.
 
-(__open__ file-name) → file-handle
+(__open!__ file-name) → file-handle
 
 > Open a file for reading or writing.
 
-(__close__ file-handle) → nil
+(__close!__ file-handle) → nil
 
 > Close an open file handle.
 

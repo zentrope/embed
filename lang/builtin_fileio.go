@@ -33,13 +33,13 @@ type fileData struct {
 }
 
 var fileioBuiltins = primitivesMap{
-	"close":     _close,
+	"close!":    _close,
 	"closed?":   _closedP,
 	"dir?":      _dirP,
 	"exists?":   _existsP,
 	"file?":     _fileP,
 	"handle?":   _handleP,
-	"open":      _open,
+	"open!":     _open,
 	"read-file": _readFile,
 	"read-line": _readLine,
 }
