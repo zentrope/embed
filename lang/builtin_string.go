@@ -23,15 +23,29 @@ import (
 )
 
 var stringBuiltins = primitivesMap{
-	"format":   _format,
-	"re-find":  _reFind,
-	"re-list":  _reList,
-	"re-match": _reMatch,
-	"re-split": _reSplit,
-	"trim":     _trim,
-	"triml":    _triml,
-	"trimr":    _trimr,
+	"ends-with?":   _endsWithP,
+	"index":        _index,
+	"format":       _format,
+	"last-index":   _lastIndex,
+	"lower-case":   _lowerCase,
+	"re-find":      _reFind,
+	"re-list":      _reList,
+	"re-match":     _reMatch,
+	"re-split":     _reSplit,
+	"replace":      _replace,
+	"starts-with?": _startsWithP,
+	"substr":       _substr,
+	"trim":         _trim,
+	"triml":        _triml,
+	"trimr":        _trimr,
+	"upper-case":   _upperCase,
 }
+
+// CoreStringFunctions written in Haki
+var CoreStringFunctions = `
+	(defun words (s)
+		(re-split "\s+" s))
+`
 
 var _trimCutSet = " \n\t\r"
 
@@ -60,6 +74,117 @@ func _trimr(args []Expression) (Expression, error) {
 	}
 
 	return NewStringExpr(strings.TrimRight(args[0].string, _trimCutSet)), nil
+}
+
+func _lowerCase(args []Expression) (Expression, error) {
+	if err := typeCheck("(lower-case s)", args, ckArity(1), ckString(0)); err != nil {
+		return NilExpression, err
+	}
+
+	return NewStringExpr(strings.ToLower(args[0].string)), nil
+}
+
+func _replace(args []Expression) (Expression, error) {
+	if err := typeCheck("(replace s old new)", args, ckArity(3), ckString(0, 1, 2)); err != nil {
+		return NilExpression, err
+	}
+
+	s := args[0].string
+	old := args[1].string
+	new := args[2].string
+
+	return NewStringExpr(strings.Replace(s, old, new, -1)), nil
+}
+
+func _substr(args []Expression) (Expression, error) {
+	if err := typeCheck("(substr s start end)", args, ckArity(3), ckString(0), ckInt(1, 2)); err != nil {
+		return NilExpression, err
+	}
+
+	s := args[0].string
+	start := args[1].integer
+	end := args[2].integer
+
+	if start < 0 {
+		return NilExpression, fmt.Errorf("(substr s start end) → `start` (%v) should be a positive int",
+			start)
+	}
+
+	if (end - start) < 0 {
+		return NilExpression, fmt.Errorf("(substr s start end) → `end` (%v) should be >= to `start` (%v)",
+			end, start)
+	}
+
+	max := int64(len(s))
+	if end > max {
+		return NilExpression, fmt.Errorf("(substr s start end) → provided value for `end` (%v) exceeds `s` length `%v`",
+			end, len(s))
+	}
+
+	if start < 0 {
+		return NilExpression, fmt.Errorf("(substr s start end) → provided value for `end` (%v) exceeds `s` length `%v`",
+			end, len(s))
+	}
+
+	cut := s[start:end]
+
+	return NewStringExpr(cut), nil
+}
+
+func _startsWithP(args []Expression) (Expression, error) {
+	if err := typeCheck("(starts-with? s)", args,
+		ckArity(2), ckString(0, 1)); err != nil {
+		return NilExpression, err
+	}
+
+	s := args[0].string
+	prefix := args[1].string
+
+	return NewBoolExpr(strings.HasPrefix(s, prefix)), nil
+}
+
+func _endsWithP(args []Expression) (Expression, error) {
+	if err := typeCheck("(ends-with? s)", args,
+		ckArity(2), ckString(0), ckString(1)); err != nil {
+		return NilExpression, err
+	}
+
+	s := args[0].string
+	suffix := args[1].string
+
+	return NewBoolExpr(strings.HasSuffix(s, suffix)), nil
+}
+
+func _upperCase(args []Expression) (Expression, error) {
+	if err := typeCheck("(upper-case s)", args, ckArity(1), ckString(0)); err != nil {
+		return NilExpression, err
+	}
+
+	return NewStringExpr(strings.ToUpper(args[0].string)), nil
+}
+
+func _index(args []Expression) (Expression, error) {
+	if err := typeCheck("(index s substr)", args, ckArity(2), ckString(0, 1)); err != nil {
+		return NilExpression, err
+	}
+
+	s := args[0].string
+	substr := args[1].string
+
+	val := strings.Index(s, substr)
+	return NewIntExpr(int64(val)), nil
+}
+
+func _lastIndex(args []Expression) (Expression, error) {
+	if err := typeCheck("(last-index s substr)", args, ckArity(2), ckString(0, 1)); err != nil {
+		return NilExpression, err
+	}
+
+	s := args[0].string
+	substr := args[1].string
+
+	val := strings.LastIndex(s, substr)
+	return NewIntExpr(int64(val)), nil
 }
 
 func _format(args []Expression) (Expression, error) {

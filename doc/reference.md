@@ -41,7 +41,7 @@ __&stderr__
 ## Math functions
 
 (**+** num<sub>1</sub> num<sub>2</sub> ... num<sub>n</sub>) → num
-> Returns the sum of all the numeric parameters.
+> Returns the sum if all the numeric parameters.
 
 (**-** num<sub>1</sub> num<sub>2</sub> ... num<sub>n</sub>) → num
 > Returns the result of subtracting each number from the previous number.
@@ -103,7 +103,7 @@ __&stderr__
 > be any type, including lists.
 
 (**list?** val) → bool
-> Return true of the `val` is a list.
+> Return true if the `val` is a list.
 
 (**head** list) → val
 > Return the first value in the list.
@@ -135,8 +135,9 @@ a new `initial-value` per `list` item.
 (**take** num list) → list
 > Returns a new list consisting of the first `num` values in `list`.
 
-(**count** list) → num
-> Returns the number of items in the `list`.
+(__count__ list) → int
+
+> Returns the number of elements in the `list`.
 
 (**join** list<sub>1</sub> list<sub>2</sub> ... list<sub>n</sub>) → list
 
@@ -153,13 +154,17 @@ a new `initial-value` per `list` item.
 
 ## Hash Map Functions
 
+(__count__ hash-map) → int
+
+> Returns the number of key/value pairs in the `hash-map`.
+
 (__hmap__ k<sub>1</sub> v<sub>1</sub> ... k<sub>n</sub> v<sub>n</sub>) → hash-map
 
 > Construct a hash-map based on the list of `k`s and `v`s.
 
 (__hmap?__ val) → bool
 
-> Return true of `val` is of type `hash-map`.
+> Return true if `val` is of type `hash-map`.
 
 (__hkeys__ m) → list
 
@@ -198,10 +203,36 @@ a new `initial-value` per `list` item.
 
 ## String functions
 
+Note: Whitespace in the following is defined as: `[' ', '\n', '\r', '\t']`.
+
+(__count__ string) → int
+
+> Returns the number of characters in the `string`.
+
+(__ends-with?__ string suffix) → bool
+
+> Returns true if string ends with suffix.
+
 (__format__ pattern val<sub>1</sub> val<sub>2</sub>... val<sub>n</sub>) → string
 
 > Formats a string based on pattern and the value parameters (a.k.a,
 __sprintf__) according to the [Golang implementation][printf].
+
+[printf]: https://golang.org/pkg/fmt/
+
+(__index__ string substr) → int
+
+> Returns the index of the first instance of `substr` in `s`, or -1
+> if `substr` is not present in `s`.
+
+(__last-index__ string substr) → int
+
+> Returns the index of the last instance of `substr` in `s`, or -1 if
+> `substr` is not present in `s`.
+
+(__lower-case__ string) → string
+
+> Return a new string with all letters in lower case.
 
 (__re-find__ regex string) → string
 
@@ -217,23 +248,43 @@ __sprintf__) according to the [Golang implementation][printf].
 
 (__re-split__ regex string) → list
 
-> Returns a list of strings split based on the `regex` applied to `string`.
+> Returns a list of strings split based on the `regex` applied to
+> `string`.
+
+(__replace__ string old new) → string
+
+> Return a copy of `string` with every instance of `old` replaced by
+> `new`.
+
+(__substr__ string start end) → string
+
+> Return the substring of `string` starting a index `start` and ending
+> at `end` (exclusive).
 
 (__trim__ string) → string
 
-> Trim spaces from both ends of a string, returning a new string.
+> Trim whitespace from both ends of a string, returning a new string.
 
 (__triml__ string) → string
 
-> Trim spaces from beginning of a string, returning a new string.
+> Trim whitespace from beginning of a string, returning a new string.
 
 (__trimr__ string) → string
 
-> Trim spaces from the end of a string, returning a new string.
+> Trim whitespace from the end of a string, returning a new string.
 
-[printf]: https://golang.org/pkg/fmt/
+(__starts-with?__ string prefix) → string
 
+> Returns true if string `starts` with `prefix`.
 
+(__upper-case__ string) → string
+
+> Return a new string with all letters in upper case.
+
+(__words__ string) → list
+
+> Return a list of words split from `string` using whitespace
+> delimiters.
 
 ## File functions
 

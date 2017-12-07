@@ -49,12 +49,24 @@ func NewListExpr(list []Expression) Expression {
 //-----------------------------------------------------------------------------
 
 func _count(args []Expression) (Expression, error) {
-	argc := len(args)
-	if argc < 1 {
-		return nilExpr("(count lst) ← lst should be a list")
+
+	if err := typeCheck("(count string|list|hash-map)", args,
+		ckArity(1), ckCountable(0)); err != nil {
+		return NilExpression, err
 	}
 
-	return NewExpr(ExpInteger, int64(len(args[0].list))), nil
+	e := args[0]
+	var c int
+
+	if e.IsList() {
+		c = len(e.list)
+	} else if e.IsHashMap() {
+		c = len(e.hashMap.keys)
+	} else {
+		c = len(e.string)
+	}
+
+	return NewIntExpr(int64(c)), nil
 }
 
 func _list(args []Expression) (Expression, error) {

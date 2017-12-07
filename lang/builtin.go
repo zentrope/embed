@@ -19,6 +19,7 @@ package lang
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 type primitiveFunc func(args []Expression) (Expression, error)
@@ -95,22 +96,65 @@ func ckArityAtLeast(numArgs int) spec {
 	}
 }
 
+// Return a spec in which the positional arg can be of more than one type
+func ckMultiType(pos int, tags ...ExpressionType) spec {
+	return func(sig string, args []Expression) error {
+		argTag := args[pos].tag
+		names := make([]string, 0)
+		for _, tag := range tags {
+			if tag == argTag {
+				return nil // no error
+			}
+			names = append(names, ExprTypeName(tag))
+		}
+		return fmt.Errorf("'%v' expects arg '%v' to be type '%v', not '%v'",
+			sig, pos+1, strings.Join(names, " or "), ExprTypeName(argTag))
+	}
+}
+
 func ckType(pos int, tag ExpressionType) spec {
 	return func(sig string, args []Expression) error {
 		if args[pos].tag != tag {
-			return fmt.Errorf("'%v' expects arg %v to be type '%v', not '%v'",
+			return fmt.Errorf("'%v' expects arg '%v' to be type '%v', not '%v'",
 				sig, pos+1, ExprTypeName(tag), ExprTypeName(args[pos].tag))
 		}
 		return nil
 	}
 }
 
-func ckString(pos int) spec {
-	return ckType(pos, ExpString)
+func ckTypes(tag ExpressionType, pos ...int) []spec {
+	specs := make([]spec, 0)
+	for _, p := range pos {
+		specs = append(specs, ckType(p, tag))
+	}
+	return specs
 }
 
-func ckMap(pos int) spec {
-	return ckType(pos, ExpHashMap)
+func ckComp(specs []spec) spec {
+	return func(sig string, args []Expression) error {
+		for _, spec := range specs {
+			if err := spec(sig, args); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
+func ckCountable(pos int) spec {
+	return ckMultiType(pos, ExpString, ExpList, ExpHashMap)
+}
+
+func ckString(pos ...int) spec {
+	return ckComp(ckTypes(ExpString, pos...))
+}
+
+func ckInt(pos ...int) spec {
+	return ckComp(ckTypes(ExpInteger, pos...))
+}
+
+func ckMap(pos ...int) spec {
+	return ckComp(ckTypes(ExpHashMap, pos...))
 }
 
 func ckList(pos int) spec {

@@ -72,9 +72,7 @@ func TestReadFile(t *testing.T) {
 	result, err := evalForm(expr)
 	if err != nil {
 		t.Error(err)
-	}
-
-	if !result.IsEqual(text) {
+	} else if !result.IsEqual(text) {
 		t.Errorf("Expected '%v', got '%v'.", text, result)
 	}
 }
@@ -109,6 +107,27 @@ func TestSimpleMath(t *testing.T) {
 		{"integer", int64(10), `(+ 1 (+ 2 6) (- 10 9))`},
 	}
 	runExpressionTests("math", table, t)
+}
+
+func TestStringBuiltins(t *testing.T) {
+	// A set of starter tests (happy path).
+	table := []form{
+		{"integer", 15, `(count "now is the time")`},
+		{"bool", true, `(ends-with? "now is the time" "time")`},
+		{"string", "ffff", `(format "%4x" 65535)`},
+		{"integer", 4, `(index "now is the time" "is")`},
+		{"integer", 11, `(last-index "now is the time" "ti")`},
+		{"string", "foobar", `(lower-case "FoObAr")`},
+		{"string", "xxxFOOxxx", `(replace "xxxEMOxxx" "EMO", "FOO")`},
+		{"string", "EMO", `(substr "xxxEMOxxx" 3 6)`},
+		{"string", "trim", `(trim "   trim  ")`},
+		{"string", "trim   ", `(triml "   trim   ")`},
+		{"string", "   trim", `(trimr "   trim   ")`},
+		{"bool", true, `(starts-with? "now is the time" "now")`},
+		{"string", "FOOBAR", `(upper-case "FoObAr")`},
+		{"list", []string{"now", "is", "the"}, `(words "now is the")`},
+	}
+	runExpressionTests("string", table, t)
 }
 
 func TestLogicBuiltins(t *testing.T) {

@@ -132,6 +132,11 @@ func NewStringExpr(s string) Expression {
 	return NewExpr(ExpString, s)
 }
 
+// NewIntExpr returns an expression representing an integer
+func NewIntExpr(v int64) Expression {
+	return NewExpr(ExpInteger, v)
+}
+
 // NewBoolExpr returns an expression representing a boolean value
 func NewBoolExpr(b bool) Expression {
 	return NewExpr(ExpBool, b)
@@ -345,6 +350,11 @@ func (e Expression) IsAtom() bool {
 // IsList returns true if expression is a list
 func (e Expression) IsList() bool {
 	return e.tag == ExpList
+}
+
+// IsHashMap returns true of the expression is a hash-map
+func (e Expression) IsHashMap() bool {
+	return e.tag == ExpHashMap
 }
 
 // Size returns the number of elements in the expression, or 1 if it's
