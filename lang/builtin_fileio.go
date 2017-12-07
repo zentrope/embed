@@ -36,6 +36,7 @@ var fileioBuiltins = primitivesMap{
 	"close!":    _close,
 	"closed?":   _closedP,
 	"dir?":      _dirP,
+	"files":     _files,
 	"exists?":   _existsP,
 	"file?":     _fileP,
 	"handle?":   _handleP,
@@ -68,6 +69,45 @@ func NewFileHandleExpr(file *os.File) Expression {
 //-----------------------------------------------------------------------------
 // Implementation
 //-----------------------------------------------------------------------------
+
+var _rootRegex = ""
+
+func _files(args []Expression) (Expression, error) {
+
+	if err := typeCheck("(dirs path)", args, ckArityAtLeast(1), ckString(0), ckOptString(1)); err != nil {
+		return NilExpression, err
+	}
+
+	root := args[0].string
+	pattern := "*"
+	if len(args) == 2 {
+		pattern = args[1].string
+	}
+
+	matches := make([]string, 0)
+
+	walker := func(path string, info os.FileInfo, err error) error {
+		ok, err := filepath.Match(pattern, info.Name())
+		if ok {
+			matches = append(matches, path)
+		}
+		if err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if err := filepath.Walk(root, walker); err != nil {
+		return NilExpression, err
+	}
+
+	list := make([]Expression, 0)
+	for _, match := range matches {
+		list = append(list, NewStringExpr(match))
+	}
+
+	return NewListExpr(list), nil
+}
 
 func _readLine(args []Expression) (Expression, error) {
 

@@ -88,7 +88,7 @@ func ckArity(numArgs int) spec {
 
 func ckArityAtLeast(numArgs int) spec {
 	return func(sig string, args []Expression) error {
-		if len(args) <= numArgs {
+		if len(args) < numArgs {
 			return fmt.Errorf("'%v' expects at least '%v' arg(s), you provided '%v'",
 				sig, numArgs, len(args))
 		}
@@ -147,6 +147,15 @@ func ckCountable(pos int) spec {
 
 func ckString(pos ...int) spec {
 	return ckComp(ckTypes(ExpString, pos...))
+}
+
+func ckOptString(pos int) spec {
+	return func(sig string, args []Expression) error {
+		if len(args) > pos {
+			return ckString(pos)(sig, args)
+		}
+		return nil
+	}
 }
 
 func ckInt(pos ...int) spec {

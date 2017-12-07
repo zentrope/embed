@@ -288,14 +288,6 @@ __sprintf__) according to the [Golang implementation][printf].
 
 ## File functions
 
-(__read-file__ file-name) → string
-
-> Return the contents of the named file as a string.
-
-(__open!__ file-name) → file-handle
-
-> Open a file for reading or writing.
-
 (__close!__ file-handle) → nil
 
 > Close an open file handle.
@@ -304,9 +296,9 @@ __sprintf__) according to the [Golang implementation][printf].
 
 > Return true if the `file-handle` is closed.
 
-(__handle?__ file-handle) → bool
+(__dir?__ file-name) → bool
 
-> Return true if `file-handle` is a file-handle returned by open.
+> Returns true if the file is a directory (not a file).
 
 (__exists?__ file-namee) → bool
 
@@ -316,15 +308,25 @@ __sprintf__) according to the [Golang implementation][printf].
 
 > Returns true if the file is a file (not a directory).
 
-(__dir?__ file-name) → bool
-
-> Returns true if the file is a directory (not a file).
-
-(__dirs__ file-name) → list <span style="color:red">_;; not implemented_</span>
+(__files__ path [glob]) → list
 
 > Return a list of all the files and directories (recursive) starting
-at file-name-or-handle as the root.
+at path. If `glob` is provided, results are filtered by matching file
+names. For example: `(files "/usr/local/Cellar" "INSTALL*json")`.
+
+(__handle?__ file-handle) → bool
+
+> Return true if `file-handle` is a file-handle returned by open.
+
+(__open!__ file-name) → file-handle
+
+> Open a file for reading or writing.
+
+(__read-file__ file-name) → string
+
+> Return the contents of the named file as a string.
 
 (__read-line__ file-handle) → string \ nil
 
-> Read a line from a `file-handle`. A `nil` signifies an end-of-file condition.
+> Read a line from a `file-handle`. A `nil` signifies an end-of-file
+> condition.
