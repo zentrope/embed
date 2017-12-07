@@ -17,8 +17,32 @@
 package lang
 
 var logicBuiltins = primitivesMap{
-	"=":   _equals,
-	"not": _not,
+	"=":      _equals,
+	"false?": _falseP,
+	"nil?":   _nilP,
+	"not":    _not,
+	"true?":  _trueP,
+}
+
+func _trueP(args []Expression) (Expression, error) {
+	if err := typeCheck("(true? v)", args, ckArity(1)); err != nil {
+		return NilExpression, err
+	}
+	return NewBoolExpr(args[0].IsBool() && args[0].bool), nil
+}
+
+func _falseP(args []Expression) (Expression, error) {
+	if err := typeCheck("(false? v)", args, ckArity(1)); err != nil {
+		return NilExpression, err
+	}
+	return NewBoolExpr(args[0].IsBool() && !args[0].bool), nil
+}
+
+func _nilP(args []Expression) (Expression, error) {
+	if err := typeCheck("(nil? v)", args, ckArity(1)); err != nil {
+		return NilExpression, err
+	}
+	return NewBoolExpr(args[0].IsNil()), nil
 }
 
 func _not(args []Expression) (Expression, error) {

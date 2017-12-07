@@ -70,16 +70,30 @@ __&stderr__
 > Returns true if each `num` is less than the number to its right.
 
 
-
 ## Logic functions
 
-(**not** val) → bool
-> Returns false if the `val` is truthy (not false or nil), otherwise true.
-
 (__=__ val<sub>1</sub> val<sub>2</sub>) → bool
+
 > Returns true if the `val` of each of the params is equivalent
 (regardless of whether or not they're the same object in memory).
 
+(__false?__ val) → bool
+
+> Returns true if the val evaluates to a literal false.
+
+(__nil?__ val) → bool
+
+> Returns true if `val` is nil.
+
+(__not__ val) → bool
+
+> Returns false if the `val` is truthy (not false or nil), otherwise
+> true.
+
+(__true?__ val) → bool
+
+> Returns true if the val evaluates to a literal true (not just
+> truthy).
 
 ## List functions
 

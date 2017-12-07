@@ -36,6 +36,25 @@ type form struct {
 	form     string
 }
 
+func runExpressionTests(category string, table []form, t *testing.T) {
+	for _, row := range table {
+		t.Logf("%v: %v", category, row.form)
+		rc, err := evalForm(row.form)
+		if err != nil {
+			t.Error(err)
+		}
+
+		if !(rc.Type() == row.tag) {
+			t.Errorf("Expected '%v' result: %v → %v → %v", row.tag, row.expected, row.form, rc)
+		}
+
+		if !rc.IsEqual(row.expected) {
+			t.Errorf("Expected '%v' result: %v → %v → %v (%v)",
+				row.tag, row.form, row.expected, rc, rc.Type())
+		}
+	}
+}
+
 func TestReadFile(t *testing.T) {
 
 	text := "test text"
@@ -77,22 +96,7 @@ func TestRegexBuiltins(t *testing.T) {
 		{"string", "</p>", `(re-find "[<][/]\S+[>]" "<p>Some text.</p>")`},
 	}
 
-	for _, row := range table {
-		t.Logf("regex: %v", row.form)
-		rc, err := evalForm(row.form)
-		if err != nil {
-			t.Error(err)
-		}
-
-		if !(rc.Type() == row.tag) {
-			t.Errorf("Expected '%v' result: %v → %v → %v", row.tag, row.expected, row.form, rc)
-		}
-
-		if !rc.IsEqual(row.expected) {
-			t.Errorf("Expected '%v' result: %v → %v → %v (%v)",
-				row.tag, row.form, row.expected, rc, rc.Type())
-		}
-	}
+	runExpressionTests("regex", table, t)
 }
 
 func TestSimpleMath(t *testing.T) {
@@ -104,23 +108,20 @@ func TestSimpleMath(t *testing.T) {
 		{"float", float64(2.1), `(+ 2 0.1)`},
 		{"integer", int64(10), `(+ 1 (+ 2 6) (- 10 9))`},
 	}
+	runExpressionTests("math", table, t)
+}
 
-	for _, row := range table {
-		t.Logf("math: %v", row.form)
-		rc, err := evalForm(row.form)
-		if err != nil {
-			t.Error(err)
-		}
-
-		if !(rc.Type() == row.tag) {
-			t.Errorf("Expected '%v' result: %v → %v → %v", row.tag, row.expected, row.form, rc)
-		}
-
-		if !rc.IsEqual(row.expected) {
-			t.Errorf("Expected '%v' result: %v → %v → %v (%v)",
-				row.tag, row.form, row.expected, rc, rc.Type())
-		}
+func TestLogicBuiltins(t *testing.T) {
+	table := []form{
+		{"bool", true, `(true? true)`},
+		{"bool", true, `(true? (= 1 1))`},
+		{"bool", false, `(true? false)`},
+		{"bool", false, `(true? '(a b c))`},
+		{"bool", true, `(false? false)`},
+		{"bool", true, `(false? (not (= 1 1)))`},
+		{"bool", true, `(nil? (tail '()))`},
 	}
+	runExpressionTests("logic", table, t)
 }
 
 func TestLetRecursive(t *testing.T) {
@@ -131,21 +132,5 @@ func TestLetRecursive(t *testing.T) {
 		{"integer", int64(4), `(do (defun foo (x) (let (a (+ x 1)) a)) (foo 3))`},
 		{"list", []int64{1, 3, 5, 7, 9}, `(filter (fn (x) (odd? x)) (range 10))`},
 	}
-	for _, row := range table {
-		t.Logf("letrec: %v", row.form)
-		rc, err := evalForm(row.form)
-		if err != nil {
-			t.Error(err)
-		}
-
-		if !(rc.Type() == row.tag) {
-			t.Errorf("Expected '%v' result: %v → %v → %v", row.tag, row.expected, row.form, rc)
-		}
-
-		if !rc.IsEqual(row.expected) {
-			t.Errorf("Expected '%v' result: %v → %v → %v (%v)",
-				row.tag, row.form, row.expected, rc, rc.Type())
-		}
-	}
-
+	runExpressionTests("letrec", table, t)
 }

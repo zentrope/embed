@@ -317,35 +317,15 @@ func (e Expression) String() string {
 	}
 }
 
-// DebugString provides type information for expressions
-// func (e Expression) DebugString() string {
-//	switch e.tag {
-//	case ExpPrimitive:
-//		return fmt.Sprintf("builtin::%v", e.primitive)
-//	case ExpList:
-//		elems := make([]string, 0)
-//		for _, e := range e.list {
-//			elems = append(elems, e.DebugString())
-//		}
-//		return fmt.Sprintf("(%v)", strings.Join(elems, " "))
-//	case ExpString:
-//		return "str→" + string(e.string)
-//	case ExpInteger:
-//		return fmt.Sprintf("int→%d", e.integer)
-//	case ExpFloat:
-//		return fmt.Sprintf("float→%f", e.float)
-//	case ExpSymbol:
-//		return "sym→" + string(e.symbol)
-//	case ExpBool:
-//		return fmt.Sprintf("bool→%v", e.bool)
-//	case ExpQuote:
-//		return "(quote " + e.quote.DebugString() + ")"
-//	case ExpNil:
-//		return "nil"
-//	default:
-//		return fmt.Sprintf("unknown→%#v", e)
-//	}
-//}
+// IsNil returns true if the expression represents nil
+func (e Expression) IsNil() bool {
+	return e.tag == ExpNil
+}
+
+// IsBool returns true if the expression represents nil
+func (e Expression) IsBool() bool {
+	return e.tag == ExpBool
+}
 
 // IsSymbol returns true if expression is a symbol
 func (e Expression) IsSymbol() bool {
