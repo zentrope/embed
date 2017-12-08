@@ -330,3 +330,11 @@ names. For example: `(files "/usr/local/Cellar" "INSTALL*json")`.
 
 > Read a line from a `file-handle`. A `nil` signifies an end-of-file
 > condition.
+
+## OS functions
+
+(__env__ name [default]) → string _or_ nil
+
+> Return the value of the environment value for `name` or `nil`, orif
+> `default` is provided, return it if the environment variable is not
+> found.

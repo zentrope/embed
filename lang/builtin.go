@@ -36,6 +36,7 @@ func init() {
 		fileioBuiltins,  // builtins_fileio
 		hashmapBuiltins, // builtins_hashmap
 		writeBuiltins,   // builtins_write
+		osBuiltins,      // builtins_os
 	}
 	for _, prim := range prims {
 		for name, fn := range prim {
