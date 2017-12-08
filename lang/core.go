@@ -92,4 +92,4 @@ var Core = spacify(`
 											nil
 											(do (f index (head lst))
 													(_loop (inc index) f (tail lst))))))
-		(_loop 0 f lst)))` + CoreStringFunctions)
+		(_loop 0 f lst)))` + CoreStringFunctions + CoreListFunctions)

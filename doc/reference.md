@@ -97,51 +97,39 @@ __&stderr__
 
 ## List functions
 
-(**list** val<sub>1</sub> val<sub>2</sub> ... val<sub>n</sub>) → list
+(__append__ list val) → list
 
-> Return a list constituting all the parameter `vals`. The `vals` can
-> be any type, including lists.
-
-(**list?** val) → bool
-> Return true if the `val` is a list.
-
-(**head** list) → val
-> Return the first value in the list.
-
-(**tail** list) → val
-> Return the remainder of the list, ignore the first value.
-
-(**append** list val) → list
 > Add the `val` to the end of the list, returning a new list.
-
-(**prepend** val list) → list
-> Add the `val` to the beginning of the list, returning a new list.
-
-(**map** function list) → list
-> Returns a list made up of `function` applied to each value in `list`.
-
-(**filter** function list) → list
-> Returns a list made up of all the values in `list` for which
-(`function` item) returns true.
-
-(**reduce** function initial-value list) → val
-> Returns a value calculated by `function` applied to the
-`initial-value` and each item in the `list`, with the `function` returning
-a new `initial-value` per `list` item.
-
-(**range** num) → list
-> Returns a list of numbers from 0 to `num` step 1.
-
-(**take** num list) → list
-> Returns a new list consisting of the first `num` values in `list`.
 
 (__count__ list) → int
 
 > Returns the number of elements in the `list`.
 
-(**join** list<sub>1</sub> list<sub>2</sub> ... list<sub>n</sub>) → list
+(__filter__ function list) → list
+
+> Returns a list made up of all the values in `list` for which
+(`function` item) returns true.
+
+(__first__ list) → val
+
+> Return the first value in the `list`.
+
+(__head__ list) → val
+
+> Return the first value in the `list`.
+
+(__join__ list<sub>1</sub> list<sub>2</sub> ... list<sub>n</sub>) → list
 
 > Returns the concatenation of each parameter into a single list.
+
+(__list__ val<sub>1</sub> val<sub>2</sub> ... val<sub>n</sub>) → list
+
+> Return a list constituting all the parameter `vals`. The `vals` can
+> be any type, including lists.
+
+(__list?__ val) → bool
+
+> Return true if the `val` is a list.
 
 (__loop__ fn list) → nil
 
@@ -151,6 +139,51 @@ a new `initial-value` per `list` item.
 
 > Applies `fn` to an incrementing index and each `val` in `list` (example: `(fn (idx
 > val) (prn idx val))`) for side-effects.
+
+(__prepend__ val list) → list
+
+> Add the `val` to the beginning of the list, returning a new list.
+
+(__map__ function list) → list
+
+> Returns a list made up of `function` applied to each value in `list`.
+
+(__nth__ list index) → val
+
+> Returns the value at position `index` (assuming the first item in
+> the list is at index 0).
+
+(__nth-tail__ list index) → list
+
+> Returns the rest of the `list` starting at the zero-based `index` to
+> the end of the `list`.
+
+(__range__ num) → list
+
+> Returns a list of numbers from 0 to `num` step 1.
+
+(__reduce__ function initial-value list) → val
+
+> Returns a value calculated by `function` applied to the
+`initial-value` and each item in the `list`, with the `function` returning
+a new `initial-value` per `list` item.
+
+(__second__ lst) → val
+
+> Return the second val in `list`.
+
+(__tail__ list) → val
+
+> Return the remainder of the list, ignore the first value.
+
+(__take__ num list) → list
+
+> Returns a new list consisting of the first `num` values in `list`.
+
+(__third__ list) → val
+
+> Return the third val in `list`.
+
 
 ## Hash Map Functions
 

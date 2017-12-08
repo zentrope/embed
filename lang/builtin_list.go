@@ -21,15 +21,31 @@ import (
 )
 
 var listBuiltins = map[string]primitiveFunc{
-	"append":  _append,
-	"count":   _count,
-	"head":    _head,
-	"join":    _join,
-	"list":    _list,
-	"list?":   _listP,
-	"prepend": _prepend,
-	"tail":    _tail,
+	"append":   _append,
+	"count":    _count,
+	"head":     _head,
+	"first":    _head,
+	"join":     _join,
+	"list":     _list,
+	"list?":    _listP,
+	"nth":      _nth,
+	"nth-tail": _nthTail,
+	"prepend":  _prepend,
+	"tail":     _tail,
 }
+
+// CoreListFunctions written in Haki
+var CoreListFunctions = `
+;; Core list functions in Haki
+
+(defun second (list)
+	;; Return the second value in 'list'.
+	(head (tail list)))
+
+(defun third (list)
+	;; Return the third value in 'list'.
+	(head (tail (tail list))))
+`
 
 // NewListExpr constructs a new list
 func NewListExpr(list []Expression) Expression {
@@ -47,6 +63,36 @@ func NewListExpr(list []Expression) Expression {
 //-----------------------------------------------------------------------------
 // IMPLEMENTATION
 //-----------------------------------------------------------------------------
+
+func _nth(args []Expression) (Expression, error) {
+	if err := typeCheck("(nth lst index)", args, ckArity(2), ckList(0), ckInt(1)); err != nil {
+		return NilExpression, err
+	}
+
+	lst := args[0].list
+	i := int(args[1].integer)
+
+	if i >= len(lst) {
+		return nilExpr("Can't get value at zero-based index '%v' out of a list of length '%v'.",
+			i, len(lst))
+	}
+	return lst[i], nil
+}
+
+func _nthTail(args []Expression) (Expression, error) {
+	if err := typeCheck("(nth-tail lst index)", args, ckArity(2), ckList(0), ckInt(1)); err != nil {
+		return NilExpression, err
+	}
+
+	lst := args[0].list
+	i := int(args[1].integer)
+
+	if i >= len(lst) {
+		return NewListExpr([]Expression{}), nil
+	}
+
+	return NewListExpr(lst[i:]), nil
+}
 
 func _count(args []Expression) (Expression, error) {
 
