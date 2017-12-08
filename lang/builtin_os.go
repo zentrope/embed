@@ -16,10 +16,14 @@
 
 package lang
 
-import "os"
+import (
+	"os"
+	"strings"
+)
 
 var osBuiltins = primitivesMap{
-	"env": _env,
+	"env":         _env,
+	"environment": _environment,
 }
 
 func _env(args []Expression) (Expression, error) {
@@ -38,4 +42,21 @@ func _env(args []Expression) (Expression, error) {
 		return NilExpression, nil
 	}
 	return NewStringExpr(result), nil
+}
+
+func _environment(args []Expression) (Expression, error) {
+
+	if err := typeCheck("(environment)", args, ckArity(0)); err != nil {
+		return NilExpression, err
+	}
+
+	env := os.Environ()
+	results := newHakiMap()
+
+	for _, e := range env {
+		words := strings.Split(e, "=")
+		results.set(NewStringExpr(words[0]), NewStringExpr(words[1]))
+	}
+
+	return NewHashMapExpr(results), nil
 }

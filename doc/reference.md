@@ -338,3 +338,8 @@ names. For example: `(files "/usr/local/Cellar" "INSTALL*json")`.
 > Return the value of the environment value for `name` or `nil`, orif
 > `default` is provided, return it if the environment variable is not
 > found.
+
+(__environment__) → hash-map
+
+> Return a hash-map of the key/value pairs in the operating system
+> environment.
