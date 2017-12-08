@@ -364,7 +364,7 @@ names. For example: `(files "/usr/local/Cellar" "INSTALL*json")`.
 
 > Return the contents of the named file as a string.
 
-(__read-line__ file-handle) → string \ nil
+(__read-line__ file-handle) → string _or_ nil
 
 > Read a line from a `file-handle`. A `nil` signifies an end-of-file
 > condition.
@@ -373,11 +373,10 @@ names. For example: `(files "/usr/local/Cellar" "INSTALL*json")`.
 
 (__env__ name [default]) → string _or_ nil
 
-> Return the value of the environment value for `name` or `nil`, orif
-> `default` is provided, return it if the environment variable is not
-> found.
+> Return the value of the environment value for `name`. If not found,
+> return `nil`, or if provided, `default`.
 
 (__environment__) → hash-map
 
-> Return a hash-map of the key/value pairs in the operating system
+> Return a hash-map of the key/value pairs making up the process
 > environment.
