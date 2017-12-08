@@ -28,6 +28,7 @@ var hashmapBuiltins = primitivesMap{
 	"hset":    _hset,
 	"hmap?":   _hmapP,
 	"hkeys":   _hkeys,
+	"hsets":   _hsets,
 	"hvals":   _hvals,
 	"hget-in": _hgetin,
 	"hset-in": _hsetin,
@@ -66,6 +67,10 @@ func (hmap *HakiHashMap) copy() *HakiHashMap {
 		newMap.set(hmap.keys[lookup], val)
 	}
 	return newMap
+}
+
+func (hmap *HakiHashMap) isEmpty() bool {
+	return len(hmap.keys) == 0
 }
 
 func (hmap *HakiHashMap) String() string {
@@ -130,6 +135,26 @@ func _hmapP(args []Expression) (Expression, error) {
 	}
 
 	return NewExpr(ExpBool, args[0].tag == ExpHashMap), nil
+}
+
+func _hsets(args []Expression) (Expression, error) {
+	if err := typeCheck("(hsets m)", args, ckArity(1), ckMap(0)); err != nil {
+		return NilExpression, err
+	}
+
+	hm := args[0].hashMap
+
+	if hm.isEmpty() {
+		return NewListExpr([]Expression{}), nil
+	}
+
+	pairs := make([]Expression, 0)
+	for k, v := range hm.keys {
+		pair := NewListExpr([]Expression{v, hm.vals[k]})
+		pairs = append(pairs, pair)
+	}
+
+	return NewListExpr(pairs), nil
 }
 
 func _hkeys(args []Expression) (Expression, error) {

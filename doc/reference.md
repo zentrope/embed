@@ -222,6 +222,11 @@ a new `initial-value` per `list` item.
 > Return a new hash-map adding each `k/v` pair to the old
 > `hash-map`. Setting `k` to `nil` deletes the map entry.
 
+(__hsets__ m) → list of list
+
+> Returns a list of tuples consisting of the key value pairs in the
+> map. Not guaranteed to be in any particular order.
+
 (__hset-in__ m '(k<sub>1</sub> ... k<sub>n</sub>) v) → hash-map
 
 > Set value of k<sub>n</sub> to val `v`, creating intermediate paths
