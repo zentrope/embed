@@ -26,6 +26,11 @@ var writeBuiltins = primitivesMap{
 }
 
 func _prn(args []Expression) (Expression, error) {
+	if len(args) == 0 {
+		fmt.Println("")
+		return NilExpression, nil
+	}
+
 	values := make([]string, 0)
 	for _, a := range args {
 		value := a.String()
