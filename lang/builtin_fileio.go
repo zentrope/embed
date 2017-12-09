@@ -87,6 +87,10 @@ func _files(args []Expression) (Expression, error) {
 	matches := make([]string, 0)
 
 	walker := func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
 		ok, err := filepath.Match(pattern, info.Name())
 		if ok {
 			matches = append(matches, path)
