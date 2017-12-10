@@ -206,7 +206,7 @@ func (x NaiveInterpreter) evalFunction(env *Environment, name Expression, params
 		return nilExpr("defun name (params) ← parameters must be a list")
 	}
 
-	f := NewFunctionExpr(name, params, body)
+	f := NewFunctionExpr(env, name, params, body)
 	env.Set(name, f)
 	return f, nil
 }

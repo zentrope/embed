@@ -255,7 +255,7 @@ func (x TcoInterpreter) evalDefun(env *Environment, name, params Expression, bod
 		return nilExpr("defun name (params) ← parameters must be a list")
 	}
 
-	f := NewFunctionExpr(name, params, body)
+	f := NewFunctionExpr(env, name, params, body)
 	env.Set(name, f)
 	return f, nil
 }
@@ -383,7 +383,8 @@ func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression,
 					env = fn.functionEnv.ExtendEnvironment(*fn.functionParams, argv)
 					expr = *fn.functionBody
 				} else if fn.IsFunction() {
-					env = env.ExtendEnvironment(*fn.functionParams, argv)
+					env = fn.functionEnv.ExtendEnvironment(*fn.functionParams, argv)
+					// env = env.ExtendEnvironment(*fn.functionParams, argv)
 					expr = *fn.functionBody
 				} else {
 					return nilExpr("unable to apply %v", fn)

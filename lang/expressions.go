@@ -143,16 +143,18 @@ func NewBoolExpr(b bool) Expression {
 }
 
 // NewFunctionExpr returns an expression representing a function
-func NewFunctionExpr(name Expression, params Expression, body Expression) Expression {
+func NewFunctionExpr(env *Environment, name Expression, params Expression, body Expression) Expression {
 	p := params
 	b := WrapImplicitDo(body.list)
+	e := env.Clone()
 
 	return Expression{
 		tag:            ExpFunction,
-		hash:           hashIt(ExpFunction, name, p.hash, b.hash),
+		hash:           hashIt(ExpFunction, name, p.hash, b.hash, e),
 		functionName:   name.symbol,
 		functionParams: &p,
 		functionBody:   &b,
+		functionEnv:    e,
 	}
 }
 
