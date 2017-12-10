@@ -159,6 +159,10 @@ func ckOptString(pos int) spec {
 	}
 }
 
+func ckFuncable(pos int) spec {
+	return ckMultiType(pos, ExpSymbol, ExpList)
+}
+
 func ckInt(pos ...int) spec {
 	return ckComp(ckTypes(ExpInteger, pos...))
 }

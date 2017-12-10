@@ -50,6 +50,56 @@ func isValidArity(fn Expression, args []Expression) (bool, error) {
 }
 
 //-----------------------------------------------------------------------------
+// LOOP
+//-----------------------------------------------------------------------------
+
+func (x TcoInterpreter) evalLoop(env *Environment, args Expression) (Expression, error) {
+
+	if err := typeCheck("(loop (fn (x) ...) lst)", args.list,
+		ckArity(2), ckFuncable(0)); err != nil {
+		return NilExpression, err
+	}
+
+	fn := args.list[0]
+
+	lst, err := x.Evaluate(env, args.list[1])
+	if err != nil {
+		return NilExpression, err
+	}
+
+	for _, e := range lst.list {
+		_, err := x.Evaluate(env, NewListExpr([]Expression{fn, e}))
+		if err != nil {
+			return NilExpression, err
+		}
+	}
+	return NilExpression, nil
+}
+
+func (x TcoInterpreter) evalLoopIndex(env *Environment, args Expression) (Expression, error) {
+
+	if err := typeCheck("(loop-index (fn (i x) ...) lst)", args.list,
+		ckArity(2), ckFuncable(0)); err != nil {
+		return NilExpression, err
+	}
+
+	fn := args.list[0]
+
+	lst, err := x.Evaluate(env, args.list[1])
+	if err != nil {
+		return NilExpression, err
+	}
+
+	for i, e := range lst.list {
+		_, err := x.Evaluate(env, NewListExpr([]Expression{fn, NewIntExpr(int64(i)), e}))
+		if err != nil {
+			return NilExpression, err
+		}
+	}
+	return NilExpression, nil
+}
+
+//-----------------------------------------------------------------------------
 // IF
 //-----------------------------------------------------------------------------
 
@@ -260,6 +310,12 @@ func (x TcoInterpreter) Evaluate(env *Environment, expr Expression) (Expression,
 			rest := expr.Tail()
 
 			switch first.symbol {
+
+			case "loop":
+				return x.evalLoop(env, rest)
+
+			case "loop-index":
+				return x.evalLoopIndex(env, rest)
 
 			case "if":
 				expr, err = x.evalIf(env, rest)

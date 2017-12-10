@@ -58,13 +58,6 @@ var Core = spacify(`
 									 (append (_range (- x 1)) x))))
 		(_range (- x 1))))
 
-(defun factorial (n)
-	(let (_fact (fn (product n)
-								(if (< n 2)
-									product
-									(_fact (* product n) (- n 1)))))
-		(_fact 1 n)))
-
 (defun take (x lst)
 	(let (_take (fn (accum ls)
 								(if (or (= ls '()) (= (count accum) x))
@@ -77,19 +70,4 @@ var Core = spacify(`
 
 (defun odd? (x)
 	(not (even? x)))
-
-(defun loop (f lst)
-	(let (_loop (fn (f lst)
-									 (if (= lst '())
-										 nil
-										 (do (f (head lst))
-												 (_loop f (tail lst))))))
-		(_loop f lst)))
-
-(defun loop-index (f lst)
-	(let (_loop (fn (index f lst)
-										(if (= lst '())
-											nil
-											(do (f index (head lst))
-													(_loop (inc index) f (tail lst))))))
-		(_loop 0 f lst)))` + CoreStringFunctions + CoreListFunctions)
+` + CoreStringFunctions + CoreListFunctions)
