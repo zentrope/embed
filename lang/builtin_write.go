@@ -25,6 +25,19 @@ var writeBuiltins = primitivesMap{
 	"prn": _prn,
 }
 
+func unquoteAll(value string) string {
+	// Surely there's a better or builtin way to do this.
+	reps := map[string]string{
+		"\\n": "\n",
+		"\\r": "\r",
+		"\\t": "\t",
+	}
+	for k, v := range reps {
+		value = strings.Replace(value, k, v, -1)
+	}
+	return value
+}
+
 func _prn(args []Expression) (Expression, error) {
 	if len(args) == 0 {
 		fmt.Println("")
@@ -32,10 +45,11 @@ func _prn(args []Expression) (Expression, error) {
 	}
 
 	values := make([]string, 0)
+	var value string
 	for _, a := range args {
-		value := a.String()
+		value = a.String()
 		if a.tag == ExpString {
-			value = a.string
+			value = unquoteAll(a.string)
 		}
 		values = append(values, value)
 	}

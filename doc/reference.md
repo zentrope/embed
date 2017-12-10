@@ -241,7 +241,7 @@ a new `initial-value` per `list` item.
 
 ## String functions
 
-Note: Whitespace in the following is defined as: `[' ', '\n', '\r', '\t']`.
+Note: Whitespace in the following is defined as: [`' '`, `'\n'`, `'\r'`, `'\t'`].
 
 (__count__ string) → int
 
