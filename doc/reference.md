@@ -26,15 +26,15 @@ __false__
 
 > Represents a boolean `false` value.
 
-__&stdin__
+__\*stdin\*__
 
 > Represents the `stdin` file-handle.
 
-__&stdout__
+__\*stdout\*__
 
 > Represents the `stdout` file-handle.
 
-__&stderr__
+__\*stderr\*__
 
 > Represents the `stderr` file-handle.
 

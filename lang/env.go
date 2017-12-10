@@ -38,9 +38,9 @@ func NewEnvironment() *Environment {
 	data["true"] = TrueExpression
 	data["false"] = FalseExpression
 	data["nil"] = NilExpression
-	data["&stdin"] = StdinExpression
-	data["&stdout"] = StdoutExpression
-	data["&stderr"] = StderrExpression
+	data["*stdin*"] = StdinExpression
+	data["*stdout*"] = StdoutExpression
+	data["*stderr*"] = StderrExpression
 
 	return &Environment{global: data, frames: frames}
 }
