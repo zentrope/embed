@@ -46,17 +46,22 @@ const (
 	Naive
 )
 
-// NewInterpreter returns an evaluator
+// NewInterpreter returns an evaluator for the repl (no cli args)
 func NewInterpreter(kind Type) Interpreter {
+	return NewScriptInterpreter(kind, []string{})
+}
+
+// NewScriptInterpreter returns an evaluator for scripts
+func NewScriptInterpreter(kind Type, cliArgs []string) Interpreter {
 	switch kind {
 	case TCO:
 		return TcoInterpreter{
-			environment: NewEnvironment(),
+			environment: NewEnvironment(cliArgs),
 			parser:      NewParser(),
 		}
 	default:
 		return NaiveInterpreter{
-			environment: NewEnvironment(),
+			environment: NewEnvironment(cliArgs),
 			parser:      NewParser(),
 		}
 	}

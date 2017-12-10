@@ -33,7 +33,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err := exec.InvokeScript(argv[1]); err != nil {
+	if err := exec.InvokeScript(argv[1], argv[2:]); err != nil {
 		fmt.Printf("ERROR: %v\n", err)
 		os.Exit(1)
 	}

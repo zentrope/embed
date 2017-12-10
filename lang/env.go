@@ -27,7 +27,7 @@ type Environment struct {
 }
 
 // NewEnvironment contains bindings
-func NewEnvironment() *Environment {
+func NewEnvironment(cliArgs []string) *Environment {
 	data := make(map[string]Expression, 0)
 	frames := make([]frameType, 0)
 
@@ -41,6 +41,7 @@ func NewEnvironment() *Environment {
 	data["*stdin*"] = StdinExpression
 	data["*stdout*"] = StdoutExpression
 	data["*stderr*"] = StderrExpression
+	data["*args*"] = NewStringListExpr(cliArgs)
 
 	return &Environment{global: data, frames: frames}
 }

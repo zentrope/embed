@@ -24,14 +24,14 @@ import (
 )
 
 // InvokeScript loads and runs a haki script.
-func InvokeScript(filename string) error {
+func InvokeScript(filename string, args []string) error {
 
 	script, err := loadScript(filename)
 	if err != nil {
 		return err
 	}
 
-	return runScript(script)
+	return runScript(script, args)
 }
 
 var hashBangRe = regexp.MustCompile("(?m)^[#][!].*$")
@@ -46,8 +46,8 @@ func loadScript(fname string) (string, error) {
 	return hashBangRe.ReplaceAllString(str, ""), nil
 }
 
-func runScript(script string) error {
-	interpreter := lang.NewInterpreter(lang.TCO)
+func runScript(script string, args []string) error {
+	interpreter := lang.NewScriptInterpreter(lang.TCO, args)
 	reader := lang.NewReader(lang.Core, script)
 
 	_, err := interpreter.Run(reader)

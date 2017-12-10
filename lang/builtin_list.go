@@ -60,6 +60,20 @@ func NewListExpr(list []Expression) Expression {
 	return Expression{tag: ExpList, hash: hashIt(data...), list: list}
 }
 
+// NewStringListExpr is a convenience function to turn a string array into a Haki list
+func NewStringListExpr(args []string) Expression {
+
+	if len(args) == 0 {
+		return NewListExpr([]Expression{})
+	}
+
+	list := make([]Expression, 0)
+	for _, a := range args {
+		list = append(list, NewStringExpr(a))
+	}
+	return NewListExpr(list)
+}
+
 //-----------------------------------------------------------------------------
 // IMPLEMENTATION
 //-----------------------------------------------------------------------------
