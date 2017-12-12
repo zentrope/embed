@@ -28,6 +28,7 @@ var osBuiltins = primitivesMap{
 	"environment": _environment,
 	"exec!":       _execBang,
 	"exec!!":      _execBangBang,
+	"shell!":      _shellBang,
 }
 
 func toStringSlice(args []Expression) []string {
@@ -40,6 +41,28 @@ func toStringSlice(args []Expression) []string {
 		}
 	}
 	return params
+}
+
+func _shellBang(args []Expression) (Expression, error) {
+	if err := typeCheck("(shell! cmd args…)", args,
+		ckArityAtLeast(1), ckString(0)); err != nil {
+		return NIL, err
+	}
+
+	cmd := args[0].string
+	params := toStringSlice(args[1:])
+
+	proc := exec.Command(cmd, params...)
+
+	proc.Stdout = os.Stdout
+	proc.Stderr = os.Stderr
+
+	err := proc.Run()
+
+	if err != nil {
+		return hStr(err.Error()), nil
+	}
+	return NIL, nil
 }
 
 func _execBang(args []Expression) (Expression, error) {

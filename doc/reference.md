@@ -394,3 +394,11 @@ names. For example: `(files "/usr/local/Cellar" "INSTALL*json")`.
 > hash-map containing keys for `ok`, `stderr`, `stdout` and
 > `exit`. Note that some commands produce a non-zero exit, but useful
 > output on `stdout`. For example, `git help`.
+
+(__shell!__ cmd arg<sub>1</sub> … arg<sub>n</sub>) → nil __or__ string
+
+> Executes process `cmd` with `args` as a sub-process, dumping `stdout`
+> or `stderr` to the inherited `stdout` or `stderr` of Haki itself. Good for
+> running commands where you want to see the output as it happens
+> (e.g., progress meters) but don't care about the output afterwards;
+> as if you were scripting a shell.
