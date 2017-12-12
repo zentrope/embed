@@ -1,3 +1,4 @@
+<!-- mode: gfm-mode; fill-column: 78 -->
 # haki
 
 Lisp interpreter for writing scripts and hopefully as something you
@@ -19,11 +20,11 @@ real-world tasks.
 
 ## todo
 
- * hash-map data structure and functions
- * file io
- * shell cmd exec
  * version info
- * command-line arguments
+ * ~~hash-map data structure and functions~~
+ * ~~file io~~
+ * ~~shell cmd exec~~
+ * ~~command-line arguments~~
 
 ## non-goals
 
