@@ -17,19 +17,89 @@
 package lang
 
 import (
+	"bytes"
 	"os"
+	"os/exec"
 	"strings"
 )
 
 var osBuiltins = primitivesMap{
 	"env":         _env,
 	"environment": _environment,
+	"exec!":       _execBang,
+	"exec!!":      _execBangBang,
+}
+
+func toStringSlice(args []Expression) []string {
+	params := make([]string, 0)
+	for _, a := range args {
+		if a.IsString() {
+			params = append(params, a.string)
+		} else {
+			params = append(params, a.String())
+		}
+	}
+	return params
+}
+
+func _execBang(args []Expression) (Expression, error) {
+
+	if err := typeCheck("(exec! cmd args…)", args,
+		ckArityAtLeast(1), ckString(0)); err != nil {
+		return NIL, err
+	}
+
+	cmd := args[0].string
+	params := toStringSlice(args[1:])
+
+	out, err := exec.Command(cmd, params...).CombinedOutput()
+	if err != nil {
+		return hLst(FALSE, hStr(err.Error()), hStr(string(out))), nil
+	}
+
+	return hLst(TRUE, hStr("0"), hStr(string(out))), nil
+}
+
+func _execBangBang(args []Expression) (Expression, error) {
+	if err := typeCheck("(exec!! cmd args…)", args,
+		ckArityAtLeast(1), ckString(0)); err != nil {
+		return NIL, err
+	}
+
+	cmd := args[0].string
+	params := toStringSlice(args[1:])
+
+	proc := exec.Command(cmd, params...)
+
+	var outBuf bytes.Buffer
+	var errBuf bytes.Buffer
+
+	proc.Stdout = &outBuf
+	proc.Stderr = &errBuf
+
+	err := proc.Run()
+
+	outStr := outBuf.String()
+	errStr := errBuf.String()
+
+	m := newHakiMap()
+	m.set(hSym("ok"), TRUE)
+	m.set(hSym("stderr"), hStr(errStr))
+	m.set(hSym("stdout"), hStr(outStr))
+	m.set(hSym("exit"), hStr("0"))
+
+	if err != nil {
+		m.set(hSym("ok"), FALSE)
+		m.set(hSym("exit"), hStr(err.Error()))
+	}
+
+	return hMap(m), nil
 }
 
 func _env(args []Expression) (Expression, error) {
 	if err := typeCheck("(env string)", args,
 		ckArityAtLeast(1), ckString(0), ckOptString(1)); err != nil {
-		return NilExpression, err
+		return NIL, err
 	}
 
 	name := args[0].string
@@ -37,17 +107,17 @@ func _env(args []Expression) (Expression, error) {
 	result := os.Getenv(name)
 	if result == "" {
 		if len(args) == 2 {
-			return NewStringExpr(args[1].string), nil
+			return hStr(args[1].string), nil
 		}
-		return NilExpression, nil
+		return NIL, nil
 	}
-	return NewStringExpr(result), nil
+	return hStr(result), nil
 }
 
 func _environment(args []Expression) (Expression, error) {
 
 	if err := typeCheck("(environment)", args, ckArity(0)); err != nil {
-		return NilExpression, err
+		return NIL, err
 	}
 
 	env := os.Environ()
@@ -55,8 +125,8 @@ func _environment(args []Expression) (Expression, error) {
 
 	for _, e := range env {
 		words := strings.Split(e, "=")
-		results.set(NewStringExpr(words[0]), NewStringExpr(words[1]))
+		results.set(hStr(words[0]), hStr(words[1]))
 	}
 
-	return NewHashMapExpr(results), nil
+	return hMap(results), nil
 }

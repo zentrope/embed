@@ -380,3 +380,17 @@ names. For example: `(files "/usr/local/Cellar" "INSTALL*json")`.
 
 > Return a hash-map of the key/value pairs making up the process
 > environment.
+
+(__exec!__ cmd arg<sub>1</sub> … arg<sub>n</sub>) → (bool, string, string)
+
+> Execute process `cmd` with `args` as a sub-process returning an (ok,
+> exit, output) list. `ok` is true if the command completed
+> successfully, `exit` is the exit code or reason, and `output` is the
+> combined result of `stdout` and `stderr`.
+
+(__exec!!__ cmd arg<sub>1</sub> … arg<sub>n</sub>) → hash-map
+
+> Executes process `cmd` with `args` as a sub-process, returning a
+> hash-map containing keys for `ok`, `stderr`, `stdout` and
+> `exit`. Note that some commands produce a non-zero exit, but useful
+> output on `stdout`. For example, `git help`.

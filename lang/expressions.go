@@ -127,6 +127,24 @@ func WithLambda(env *Environment, body Expression) Expression {
 	return result
 }
 
+// Simple constructors for local use
+
+func hMap(m *HakiHashMap) Expression {
+	return NewHashMapExpr(m)
+}
+
+func hStr(s string) Expression {
+	return NewExpr(ExpString, s)
+}
+
+func hSym(s string) Expression {
+	return NewExpr(ExpSymbol, s)
+}
+
+func hLst(e ...Expression) Expression {
+	return NewListExpr(e)
+}
+
 // NewStringExpr returns an expression representing a string
 func NewStringExpr(s string) Expression {
 	return NewExpr(ExpString, s)
@@ -232,11 +250,20 @@ func NewExpr(tag ExpressionType, value interface{}) Expression {
 // NilExpression represents nil
 var NilExpression = Expression{tag: ExpNil}
 
+// NIL is a short version of NilExpression
+var NIL = NilExpression
+
 // TrueExpression for a boolean true
 var TrueExpression = NewBoolExpr(true)
 
+// TRUE for a boolean true
+var TRUE = TrueExpression
+
 // FalseExpression for a boolean false
 var FalseExpression = NewBoolExpr(false)
+
+// FALSE for a boolean false
+var FALSE = FalseExpression
 
 // StdinExpression represents the STDIN file handle
 var StdinExpression = NewFileHandleExpr(os.Stdin)
@@ -342,6 +369,11 @@ func (e Expression) IsSymbol() bool {
 // IsInteger returns true if expression is an integer
 func (e Expression) IsInteger() bool {
 	return e.tag == ExpInteger
+}
+
+// IsString returns true if expression is a string
+func (e Expression) IsString() bool {
+	return e.tag == ExpString
 }
 
 // IsAtom returns true if expression is not a list
