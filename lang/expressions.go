@@ -113,10 +113,14 @@ func GenSym(prefix string) Expression {
 	return NewExpr(ExpSymbol, fmt.Sprintf("%v%v", prefix, genSymCounter))
 }
 
-// WrapImplicitDo wraps an expression in a do block
+// WrapImplicitDo wraps expressions in a do expression.
 func WrapImplicitDo(body []Expression) Expression {
-	do := NewExpr(ExpSymbol, "do")
-	return NewExpr(ExpList, append([]Expression{do}, body...))
+	// An empty body always evals to NIL.
+	if len(body) == 0 {
+		return NIL
+	}
+
+	return hLst(append([]Expression{hSym("do")}, body...)...)
 }
 
 // WithLambda returns an expression wrapped in a lambda
