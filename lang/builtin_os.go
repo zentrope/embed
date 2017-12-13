@@ -193,8 +193,8 @@ func _exitBang(args []Expression) (Expression, error) {
 	}
 
 	code := 0
-	if len(args) > 1 {
-		code = int(args[1].integer)
+	if len(args) == 1 {
+		code = int(args[0].integer)
 	}
 
 	os.Exit(code)
