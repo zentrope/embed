@@ -16,7 +16,9 @@
 
 package lang
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type frameType map[string]Expression
 

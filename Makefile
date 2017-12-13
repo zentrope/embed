@@ -15,6 +15,17 @@
 ## along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 PACKAGE = github.com/zentrope/haki
+
+GITCFLAG = $(PACKAGE)/exec.binCommit
+DATEFLAG = $(PACKAGE)/exec.binDate
+VERSFLAG = $(PACKAGE)/exec.binVers
+
+GITCVAL = $(shell git rev-parse --short HEAD)
+DATEVAL = $(shell date -u '+%Y-%m-%dT%H:%M:%S')
+VERSVAL = 1
+
+FLAGS = -ldflags "-X $(GITCFLAG)=$(GITCVAL) -X $(DATEFLAG)=$(DATEVAL) -X $(VERSFLAG)=$(VERSVAL)"
+
 BINARY = haki
 TREE = tree
 
@@ -27,10 +38,10 @@ godep:
 	fi
 
 vendor: godep ## Make sure vendor dependencies are present.
-	dep ensure
+	@dep ensure
 
 build: vendor ## Build an executable binary.
-	go build -o $(BINARY) $(PACKAGE)/cmd/haki
+	go build $(FLAGS) -o $(BINARY) $(PACKAGE)/cmd/haki
 
 clean: ## Clean build artifacts (vendor left alone).
 	rm -f $(BINARY)

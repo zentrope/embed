@@ -23,6 +23,8 @@ type Interpreter interface {
 	Evaluate(env *Environment, expr Expression) (Expression, error)
 	Execute(form string) (Expression, error)
 	Run(reader *Reader) (Expression, error)
+	SetEnv(key, value string)
+	SetVersionInfo(vers, commit, date string)
 }
 
 // TcoInterpreter attempts to implement some TCO
@@ -53,10 +55,13 @@ func NewInterpreter(kind Type) Interpreter {
 
 // NewScriptInterpreter returns an evaluator for scripts
 func NewScriptInterpreter(kind Type, cliArgs []string) Interpreter {
+	env := NewEnvironment(cliArgs)
+	env.Set(hStr("*foo*"), hStr("bar"))
 	switch kind {
 	case TCO:
 		return TcoInterpreter{
-			environment: NewEnvironment(cliArgs),
+			// environment: NewEnvironment(cliArgs),
+			environment: env,
 			parser:      NewParser(),
 		}
 	default:
@@ -110,6 +115,30 @@ func (tco TcoInterpreter) Run(reader *Reader) (Expression, error) {
 // Run executes all the forms in a reader (a script)
 func (naive NaiveInterpreter) Run(reader *Reader) (Expression, error) {
 	return runner(naive, reader)
+}
+
+// SetVersionInfo installs build version info into the environment
+func (tco TcoInterpreter) SetVersionInfo(vers, commit, date string) {
+	tco.SetEnv("*haki-version*", vers)
+	tco.SetEnv("*haki-git-commit*", commit)
+	tco.SetEnv("*haki-build-date*", date)
+}
+
+// SetVersionInfo installs build version info into the environment
+func (naive NaiveInterpreter) SetVersionInfo(vers, commit, date string) {
+	naive.SetEnv("*haki-version*", vers)
+	naive.SetEnv("*haki-git-commit*", commit)
+	naive.SetEnv("*haki-build-date*", date)
+}
+
+// SetEnv allows you to preload the environment
+func (tco TcoInterpreter) SetEnv(key, value string) {
+	tco.environment.Set(hSym(key), hStr(value))
+}
+
+// SetEnv allows you to preload the environment
+func (naive NaiveInterpreter) SetEnv(key, value string) {
+	naive.environment.Set(hStr(key), hStr(value))
 }
 
 func runner(interpreter Interpreter, reader *Reader) (Expression, error) {

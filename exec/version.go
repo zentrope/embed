@@ -17,41 +17,19 @@
 package exec
 
 import (
-	"io/ioutil"
-	"regexp"
+	"fmt"
 
 	"github.com/zentrope/haki/lang"
 )
 
-// InvokeScript loads and runs a haki script.
-func InvokeScript(filename string, args []string) error {
+var binVers = "1"
+var binCommit = "dev"
+var binDate = "dev"
 
-	script, err := loadScript(filename)
-	if err != nil {
-		return err
-	}
-
-	return runScript(script, args)
+func version() string {
+	return fmt.Sprintf("(vers: %#v, commit: %#v, date: %#v)", binVers, binCommit, binDate)
 }
 
-var hashBangRe = regexp.MustCompile("(?m)^[#][!].*$")
-
-func loadScript(fname string) (string, error) {
-	buffer, err := ioutil.ReadFile(fname)
-	if err != nil {
-		return "", err
-	}
-
-	str := string(buffer)
-	return hashBangRe.ReplaceAllString(str, ""), nil
-}
-
-func runScript(script string, args []string) error {
-	interpreter := lang.NewScriptInterpreter(lang.TCO, args)
-	setVersionEnv(interpreter)
-
-	reader := lang.NewReader(lang.Core, script)
-
-	_, err := interpreter.Run(reader)
-	return err
+func setVersionEnv(haki lang.Interpreter) {
+	haki.SetVersionInfo(binVers, binCommit, binDate)
 }

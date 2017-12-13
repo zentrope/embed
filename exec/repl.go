@@ -29,7 +29,7 @@ const promptMore = "   +> "
 
 // InvokeRepl starts the REPL mode for Haki
 func InvokeRepl() {
-	printf("Haki Repl")
+	printf("Haki Repl " + version())
 
 	rl, err := readline.New(promptRepl)
 	if err != nil {
@@ -39,6 +39,7 @@ func InvokeRepl() {
 	defer rl.Close()
 
 	interpreter := lang.NewInterpreter(lang.TCO)
+	setVersionEnv(interpreter)
 	reader := lang.NewReader(lang.Core)
 
 	// load core
