@@ -24,7 +24,7 @@ import (
 	"github.com/zentrope/haki/lang"
 )
 
-const promptRepl = "repl> "
+const promptRepl = "haki> "
 const promptMore = "   +> "
 
 // InvokeRepl starts the REPL mode for Haki
