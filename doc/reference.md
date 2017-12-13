@@ -404,6 +404,11 @@ names. For example: `(files "/usr/local/Cellar" "INSTALL*json")`.
 > `exit`. Note that some commands produce a non-zero exit, but useful
 > output on `stdout`. For example, `git help`.
 
+(__exit!__ [code])
+
+> Exits the process using the optional exit `code` or 0 if not
+> provided.
+
 (__shell!__ cmd arg<sub>1</sub> … arg<sub>n</sub>) → nil __or__ string
 
 > Executes process `cmd` with `args` as a sub-process, dumping `stdout`

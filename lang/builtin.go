@@ -97,6 +97,19 @@ func ckArityAtLeast(numArgs int) spec {
 	}
 }
 
+func ckArityOneOf(pos ...int) spec {
+	return func(sig string, args []Expression) error {
+		size := len(args)
+		for _, p := range pos {
+			if p == size {
+				return nil
+			}
+		}
+		return fmt.Errorf("'%v' expects at least '%v' args(s), you provided '%v'",
+			sig, pos, size)
+	}
+}
+
 // Return a spec in which the positional arg can be of more than one type
 func ckMultiType(pos int, tags ...ExpressionType) spec {
 	return func(sig string, args []Expression) error {
@@ -148,6 +161,15 @@ func ckCountable(pos int) spec {
 
 func ckString(pos ...int) spec {
 	return ckComp(ckTypes(ExpString, pos...))
+}
+
+func ckOptInt(pos int) spec {
+	return func(sig string, args []Expression) error {
+		if len(args) > pos {
+			return ckInt(pos)(sig, args)
+		}
+		return nil
+	}
 }
 
 func ckOptString(pos int) spec {

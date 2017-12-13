@@ -30,6 +30,7 @@ var osBuiltins = primitivesMap{
 	"environment": _environment,
 	"exec!":       _execBang,
 	"exec!!":      _execBangBang,
+	"exit!":       _exitBang,
 	"shell!":      _shellBang,
 }
 
@@ -184,4 +185,18 @@ func _environment(args []Expression) (Expression, error) {
 	}
 
 	return hMap(results), nil
+}
+
+func _exitBang(args []Expression) (Expression, error) {
+	if err := typeCheck("(exit! [int])", args, ckArityOneOf(0, 1), ckOptInt(1)); err != nil {
+		return NIL, err
+	}
+
+	code := 0
+	if len(args) > 1 {
+		code = int(args[1].integer)
+	}
+
+	os.Exit(code)
+	return NIL, nil
 }
