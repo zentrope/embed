@@ -24,6 +24,8 @@ import (
 )
 
 var osBuiltins = primitivesMap{
+	"cd!":         _cdBang,
+	"cwd":         _cwd,
 	"env":         _env,
 	"environment": _environment,
 	"exec!":       _execBang,
@@ -41,6 +43,36 @@ func toStringSlice(args []Expression) []string {
 		}
 	}
 	return params
+}
+
+func _cdBang(args []Expression) (Expression, error) {
+	if err := typeCheck("(cd! path)", args, ckArity(1), ckString(0)); err != nil {
+		return NIL, err
+	}
+
+	path := args[0].string
+
+	if err := os.Chdir(path); err != nil {
+		return NIL, err
+	}
+
+	dir, err := os.Getwd()
+	if err != nil {
+		return NIL, err
+	}
+	return hStr(dir), nil
+}
+
+func _cwd(args []Expression) (Expression, error) {
+	if err := typeCheck("(cwd)", args, ckArity(0)); err != nil {
+		return NIL, err
+	}
+
+	dir, err := os.Getwd()
+	if err != nil {
+		return NIL, err
+	}
+	return hStr(dir), nil
 }
 
 func _shellBang(args []Expression) (Expression, error) {

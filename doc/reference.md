@@ -371,7 +371,16 @@ names. For example: `(files "/usr/local/Cellar" "INSTALL*json")`.
 
 ## OS functions
 
-(__env__ name [default]) → string _or_ nil
+(__cd!__ path) → string
+
+> Change the current working directory to `path`, returning the new
+> path.
+
+(__cwd__) → string
+
+> Return the current working directory as a string.
+
+(__env__ name [default]) → string __or__ nil
 
 > Return the value of the environment value for `name`. If not found,
 > return `nil`, or if provided, `default`.
