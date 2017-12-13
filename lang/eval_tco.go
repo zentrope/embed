@@ -76,6 +76,10 @@ func (x TcoInterpreter) evalLoop(env *Environment, args Expression) (Expression,
 	return NilExpression, nil
 }
 
+//-----------------------------------------------------------------------------
+// LOOP-INDEX
+//-----------------------------------------------------------------------------
+
 func (x TcoInterpreter) evalLoopIndex(env *Environment, args Expression) (Expression, error) {
 
 	if err := typeCheck("(loop-index (fn (i x) ...) lst)", args.list,
@@ -228,10 +232,25 @@ func (x TcoInterpreter) evalDo(env *Environment, exprs Expression) (Expression, 
 	return exprs.list[len(exprs.list)-1], nil
 }
 
+//-----------------------------------------------------------------------------
+// DEF
+//-----------------------------------------------------------------------------
+
 func (x TcoInterpreter) evalDef(env *Environment, name, body Expression) (Expression, error) {
 
 	if !name.IsSymbol() {
-		return nilExpr("def name must be a symbol")
+		return nilExpr("(def name expr) «- name must be a symbol, not '%v'", ExprTypeName(name.tag))
+	}
+
+	argc := len(body.list)
+
+	if argc == 0 {
+		env.Set(name, NIL)
+		return NIL, nil
+	}
+
+	if argc != 1 {
+		return nilExpr("(def name expr) «-- takes 1 expr, you offered %v", argc)
 	}
 
 	do := WrapImplicitDo(body.list)
@@ -247,12 +266,14 @@ func (x TcoInterpreter) evalDef(env *Environment, name, body Expression) (Expres
 
 func (x TcoInterpreter) evalDefun(env *Environment, name, params Expression, body Expression) (Expression, error) {
 
+	sig := "(defun name (params) body…)"
+
 	if !name.IsSymbol() {
-		return nilExpr("defun name ← name must be a symbol")
+		return nilExpr("%v «-- name must be a symbol", sig)
 	}
 
 	if !params.IsList() {
-		return nilExpr("defun name (params) ← parameters must be a list")
+		return nilExpr("%v «-- params must be a list", sig)
 	}
 
 	f := NewFunctionExpr(env, name, params, body)
